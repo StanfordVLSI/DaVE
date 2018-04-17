@@ -1,0 +1,79 @@
+module_name: regenerative_latch
+description: Interface for regenerative latch
+pins:
+  vdd:
+    name: vdd
+    description: power supply
+    direction: input
+    datatype: pwl
+  vss:
+    name: vss
+    description: ground
+    direction: input
+    datatype: pwl
+    is_optional: True
+  inp:
+    name: inp
+    description: positive input
+    direction: input
+    datatype: pwl
+  inn:
+    name: inn
+    description: negative input
+    direction: input
+    datatype: pwl
+  clk:
+    name: clk
+    description: sampling clock
+    direction: input
+    datatype: logic
+    constraint:
+      act_high: 
+        value: True
+        description: sampling phase is when clk is high
+  out:
+    name: out
+    description: positive output
+    direction: output
+    datatype: logic
+    constraint:
+      precharge:
+        value: 
+          - 1
+          - 0
+        description: precharged value (1 or 0)
+  outb:
+    name: outb
+    description: negative output
+    direction: output
+    datatype: logic
+    constraint:
+      precharge:
+        value:
+          - 1
+          - 0
+        description: precharged value (1 or 0)
+
+metrics: # optional behaviors to be incorporated in a model
+#  compression:
+#    description: Gain compression behavior
+#  filter:
+#    description: Implement filter for dynamic behavior
+#    value: # user will choose one in the list
+#      - p1
+#      - p2
+#      - p2z1 
+      
+modelparams:
+  v_os:
+    description: input referred static offset voltage
+    datatype: real
+    value: 0.0
+  etol_v_icm:
+    description: resolution of common-mode voltage input
+    datatype: real
+    value: 0.01
+  etol_supply:
+    description: resolution of supply
+    datatype: real
+    value: 0.01

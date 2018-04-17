@@ -1,0 +1,43 @@
+//////////////////////////////////////////
+// Periodic Signal based on a lookup table
+//////////////////////////////////////////
+
+module @(module_name)(
+  output pwl out  
+);
+
+timeunit 1fs;
+timeprecision 1fs;
+
+`get_timeunit // get timeunit in sec and assign it to the variable 'TU'
+
+parameter integer LUTSize = @(LUTSize);
+
+// PWL accuracy-related parameters
+// etol set to this module is @etol
+
+// wires
+reg  wakeup = 1'b0;  // event signal
+integer index = 0;  // lut index
+real t; // current time
+real dT; // time step for scheduling event
+real dy; // delta value of the output
+
+// 1d lookup table for paired vector
+
+LUT1DPaired #(.Nsize(@LUTSize)) @(module_name)_lut=new;
+initial begin
+@[for idx in range(len(lutx))]  @(module_name)_lut.data[@idx] = '{@(lutx[idx]), @(luty[idx])};
+@[end for]end
+
+always @@(wakeup) begin
+  t = `get_time;
+  dT = @(module_name)_lut.get_dx(index);
+  dy = @(module_name)_lut.get_dy(index);
+  out = '{@(module_name)_lut.get_y(index), dy/dT, t};
+  if (index == LUTSize-2) index = 0;
+  else index += 1;
+  wakeup <= #(dT/TU) ~wakeup;
+end
+
+endmodule

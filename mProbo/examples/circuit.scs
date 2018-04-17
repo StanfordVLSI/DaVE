@@ -1,0 +1,24 @@
+// analog control file for running spectre/Verilog-AMS simulations
+
+simulator lang=spice
+
+.opt post scale=1
+.global vdd vss
+.temp @temperature          $$ @temperature is defined in test.cfg
+
+* set initial condition (dont modify this)
+@initial_condition          $$ initial_condition is defined in test.cfg
+
+// spice models
+.lib "@spice_lib" tt    $$ @spice_lib is defined in sim.cfg
+
+simulator lang=spectre
+
+quantityV quantity name="V" blowup=200e+12
+
+// tran sim control
+simTran tran start=0ns stop=@sim_time
++ method=gear2only
++ errpreset=conservative
+
+save *

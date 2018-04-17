@@ -1,0 +1,51 @@
+*************
+* Environment
+*************
+Create an environment
+---------------------
+$ conda create --name (envname) python=2 [list of packages]
+
+Activate/Deactivate an env
+--------------------------
+1. activate: $ source activate (envname)
+2. deactivate: $ deactivate
+
+Delete an env
+-------------
+$ conda remove --name (envname) --all
+
+
+Clone an env
+------------
+$ conda create --name (dst_envname) --clone (src_envname)
+
+verify env info
+---------------
+$ conda info --envs
+
+*************
+* Package
+*************
+
+Search for a package
+--------------------
+$ conda search (pkg_name)
+
+Install a package 
+-----------------
+$ conda install --name (envname) [list of packages]
+$ conda install [list of packages]  # install in the current env.
+$ pip install (package name) # install with pip
+
+List installed packages
+-----------------------
+$ conda list
+
+Remove packages
+---------------
+$ conda remove --name (envname) [list of packages]
+
+Check/Update conda version
+--------------------------
+check: $ conda --version
+update: $ conda update conda

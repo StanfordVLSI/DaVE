@@ -1,0 +1,107 @@
+* pll18d.scs
+
+simulator lang=spice
+
+*************************************************
+* Process Library
+*************************************************
+
+.protect
+.lib './ptm065/model_ptm065.lib' TT
+.temp 27
+.options scale = 0.0325u
+.unprotect
+.param vddval = 1.1
+
+*************************************************
+** Parameters
+************************************************
+
+$.param vcval   = 0.273103376858
+$.param vregval = 0.590677550809
+.param vcval   = 0.1
+.param vregval = 0.1
+
+.param freq  = 1e9
+.param tcyc  = '1/freq'
+.param N     = 2.0
+.param fref  = 'freq/N'
+.param tref  = '1/fref'
+.param trf   = '0.2*tcyc'
+.param tpw   = 'tcyc/2-trf'
+.param tpwref = 'tref/2-trf'
+.param tstop = '100*tcyc'
+.param tout  = '60*tcyc'
+
+.param pi        = 3.1416
+.param vos       = 'vddval/2'
+.param vsw       = 'vddval/2'
+.param tedge     = 100p
+.param var_white = 1e-12
+.param var_pink  = 1e-10
+
+************************************************
+** Subckt netlists
+************************************************
+.include 'pll.spi'
+
+
+
+************************************************
+** Top-level instantiation
+************************************************
+
+*xpll vdd refclk refclkb outclk outclkb pll2nd
+xpll vdd refclk refclkb outclk outclkb divclk divclkb vctrl up dn pll2nd
+
+
+.ic v(xpll.vctrl)=vcval
+.ic v(xpll.vreg) =vregval
+.ic v(xpll.vrpl) =vregval
+.ic v(xpll.xpfd.xdffref.d)=0
+.ic v(xpll.xpfd.xdfffdbk.d)=0
+.ic v(xpll.fbclk)=0
+.ic v(xpll.fbclkb)=vddval
+.ic v(xpll.divclk)=0
+.ic v(xpll.divclkb)=vddval
+.ic v(xpll.lclk)=vregval
+.ic v(xpll.lclkb)=0
+.ic v(xpll.xbuf.m)=0
+.ic v(xpll.xbuf.mb)=vddval
+.ic v(xpll.xbuf.Xds0.mid)=vddval
+.ic v(xpll.xbuf.Xds0.midb)=0
+.ic v(xpll.xbuf.Xds1.mid)=0
+.ic v(xpll.xbuf.Xds1.midb)=vddval
+
+vrefclk refclk 0 pulse(0 vddval 1n 50p 50p '0.5*tref-50p' 'tref')
+vrefclkb refclkb 0 pulse(vddval 0 1n 50p 50p '0.5*tref-50p' 'tref')
+************************************************
+** stimulus
+************************************************
+simulator lang=spectre
+
+aliasvgnd	( gnd 0   ) vsource type=dc dc=0
+aliasvgnd2	( Gnd 0   ) vsource type=dc dc=0
+
+
+global 0 vdd gnd Gnd
+vvdd  vdd  gnd vsource dc=vddval 
+
+************************************************
+** Analysis and measurement
+************************************************
+simOption options rawfmt=wsfascii save=selected \
+    temp=27 checklimitdest=psf  \
+    reltol=1e-3 vabstol=50e-6 iabstol=50e-12 cmin=1e-15 
+
+simTran tran start=0 stop=20u 
++ method=gear2only
++ errpreset=moderate
++ readns=pss.ic
++ outputstart=19.999u
++ writefinal=tran.ic
+
+save vctrl outclk outclkb
++ refclk 
++ up dn xpll.fbclk xpll.fbclkb xpll.xfilt.ri
++ divclk divclkb

@@ -1,0 +1,34 @@
+// DC simulation
+
+`include "mLingua_pwl.vh"
+
+module test;
+
+timeunit 1fs;
+timeprecision 1fs;
+
+`get_timeunit
+
+pwl @(signal_in), @(signal_out);
+PWLMethod pm=new;
+
+integer fid;
+
+initial @signal_in = pm.init(@(sine_dc), 0);
+
+// user code here
+@vlog_code  
+
+initial begin
+  fid = $fopen("meas_dc.txt");
+  //#(@@(time_inf)/TU);
+  #1;
+  $fstrobe(fid, "%e", pm.eval(@(signal_out), `get_time));
+  #1;
+  $fclose(fid);
+  $finish;
+end
+
+`run_wave
+
+endmodule

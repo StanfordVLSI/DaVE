@@ -1,0 +1,7 @@
+# Sample cds.lib for CircuitBook
+
+INCLUDE $CKTBOOK_HOME/etc/cds.lib
+DEFINE  worklib $CKTBOOK_WORKDIR/worklib 
+
+#Removed by ddDeleteObj: DEFINE regulator ./regulator
+DEFINE adaptive_ota /home/bclim/proj/modeling/pwlgen/example/adaptive_opamp/cds/adaptive_ota

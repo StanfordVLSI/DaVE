@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.0//EN" "http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd">
+<!-- Microsoft Visio 11.0, SVG Export, v1.0에서 생성되었습니다. pwlgen.svg analog model -->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:v="http://schemas.microsoft.com/visio/2003/SVGExtensions/" width="4in" height="2in"
+		viewBox="0 0 288 144" xml:space="preserve" color-interpolation-filters="sRGB" class="st8">
+	<v:documentProperties v:langID="1033" v:metric="true" v:viewMarkup="false"/>
+
+	<style type="text/css">
+	<![CDATA[
+		.st1 {stroke:#000000;stroke-linecap:round;stroke-linejoin:round;stroke-width:1.2}
+		.st2 {fill:none;stroke:#000000;stroke-linecap:round;stroke-linejoin:round;stroke-width:0.72}
+		.st3 {marker-end:url(#mrkr13-23);stroke:#000000;stroke-linecap:round;stroke-linejoin:round;stroke-width:0.72}
+		.st4 {fill:#000000;fill-opacity:1;stroke:#000000;stroke-opacity:1;stroke-width:0.22222222222222}
+		.st5 {fill:none;stroke:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:0.72}
+		.st6 {fill:#000000;font-family:Arial;font-size:0.833336em}
+		.st7 {font-size:1em}
+		.st8 {fill:none;fill-rule:evenodd;font-size:12;overflow:visible;stroke-linecap:square;stroke-miterlimit:3}
+	]]>
+	</style>
+
+	<defs id="Markers">
+		<g id="lend13">
+			<path d="M 3 1 L -0 0 L 3 -1 L 3 1 " style="stroke:none"/>
+		</g>
+		<marker id="mrkr13-23" class="st4" v:arrowType="13" v:arrowSize="2" v:setback="13.5" refX="-13.5" orient="auto"
+				markerUnits="strokeWidth">
+			<use xlink:href="#lend13" transform="scale(-4.5,-4.5) "/>
+		</marker>
+	</defs>
+	<g v:mID="0" v:index="1" v:groupContext="foregroundPage">
+		<title>analog model</title>
+		<v:pageProperties v:drawingScale="1" v:pageScale="1" v:drawingUnits="19" v:shadowOffsetX="8.50394"
+				v:shadowOffsetY="-8.50394" v:shadowType="1"/>
+		<v:layer v:name="연결선" v:index="0"/>
+		<g id="group16-1" transform="translate(5.375,-18)" v:mID="16" v:groupContext="group">
+			<title>시트.16</title>
+			<g id="group4-2" transform="translate(48.625,-54)" v:mID="4" v:groupContext="group">
+				<title>시트.4</title>
+				<g id="group2-3" transform="translate(9.375,-9)" v:mID="2" v:groupContext="group">
+					<title>시트.2</title>
+					<g id="shape1-4" v:mID="1" v:groupContext="shape">
+						<title>시트.1</title>
+						<path d="M0 144 L9 144 L22.5 139.5 L31.5 112.5 L45 108 L53.62 108" class="st1"/>
+					</g>
+				</g>
+				<g id="shape3-7" v:mID="3" v:groupContext="shape">
+					<title>시트.3</title>
+					<rect x="0" y="90" width="72" height="54" class="st2"/>
+				</g>
+			</g>
+			<g id="shape8-9" v:mID="8" v:groupContext="shape" transform="translate(156.625,-54)">
+				<title>시트.8</title>
+				<rect x="0" y="90" width="72" height="54" class="st2"/>
+			</g>
+			<g id="group7-11" transform="translate(165.625,-63)" v:mID="7" v:groupContext="group">
+				<title>시트.7</title>
+				<g id="shape5-12" v:mID="5" v:groupContext="shape" transform="translate(0,-36)">
+					<title>시트.5</title>
+					<path d="M0 144 L17.28 144" class="st1"/>
+				</g>
+				<g id="shape6-15" v:mID="6" v:groupContext="shape" transform="translate(118.09,5.17351) rotate(44.4327)">
+					<title>시트.6</title>
+					<path d="M0 144 C4.71 141.5 8.46 139.25 12.43 138.61 C14.47 138.29 16.57 138.39 18.67 138.41 C22 138.45 25.34
+								 138.29 28.6 138.52 C36.57 139.07 44.15 141.87 51.42 144" class="st1"/>
+				</g>
+			</g>
+			<g id="shape9-18" v:mID="9" v:groupContext="shape" transform="translate(120.625,-81)">
+				<title>시트.9</title>
+				<path d="M0 144 L26.28 144" class="st3"/>
+			</g>
+			<g id="shape10-24" v:mID="10" v:groupContext="shape" transform="translate(30.625,-81)">
+				<title>시트.10</title>
+				<path d="M0 144 L8.28 144" class="st3"/>
+			</g>
+			<g id="shape11-29" v:mID="11" v:groupContext="shape" transform="translate(228.625,-81)">
+				<title>시트.11</title>
+				<path d="M0 144 L8.28 144" class="st3"/>
+			</g>
+			<g id="shape12-34" v:mID="12" v:groupContext="shape" transform="translate(0,-72)">
+				<title>시트.12</title>
+				<desc>in</desc>
+				<v:textBlock v:margins="rect(4,4,4,4)" v:tabSpace="42.5197"/>
+				<v:textRect cx="15.3125" cy="135" width="30.63" height="18"/>
+				<rect x="0" y="126" width="30.625" height="18" class="st5"/>
+				<text x="18.84" y="138" class="st6" v:langID="1042"><v:paragraph v:horizAlign="2"/><v:tabList/>in</text>			</g>
+			<g id="shape13-37" v:mID="13" v:groupContext="shape" transform="translate(246.625,-72)">
+				<title>시트.13</title>
+				<desc>out</desc>
+				<v:textBlock v:margins="rect(4,4,4,4)" v:tabSpace="42.5197"/>
+				<v:textRect cx="15.3125" cy="135" width="30.63" height="18"/>
+				<rect x="0" y="126" width="30.625" height="18" class="st5"/>
+				<text x="4" y="138" class="st6" v:langID="1042"><v:paragraph/><v:tabList/>out</text>			</g>
+			<g id="shape14-40" v:mID="14" v:groupContext="shape" transform="translate(48.625,-18)">
+				<title>시트.14</title>
+				<desc>DC transfer curve</desc>
+				<v:textBlock v:margins="rect(4,4,4,4)" v:tabSpace="42.5197"/>
+				<v:textRect cx="36" cy="126" width="72" height="36"/>
+				<rect x="0" y="108" width="72" height="36" class="st5"/>
+				<text x="10.44" y="123" class="st6" v:langID="1042"><v:paragraph v:horizAlign="1"/><v:tabList/>DC transfer <tspan
+							x="23.77" dy="1.2em" class="st7">curve</tspan></text>			</g>
+			<g id="shape15-44" v:mID="15" v:groupContext="shape" transform="translate(156.625,0)">
+				<title>시트.15</title>
+				<desc>Trasnfer function in frequency domain</desc>
+				<v:textBlock v:margins="rect(4,4,4,4)" v:tabSpace="42.5197"/>
+				<v:textRect cx="36" cy="117" width="72" height="54"/>
+				<rect x="0" y="90" width="72" height="54" class="st5"/>
+				<text x="17.38" y="102" class="st6" v:langID="1042"><v:paragraph v:horizAlign="1"/><v:tabList/>Trasnfer <tspan
+							x="13.21" dy="1.2em" class="st7">function in </tspan><tspan x="14.04" dy="1.2em" class="st7">frequency </tspan><tspan
+							x="19.6" dy="1.2em" class="st7">domain</tspan></text>			</g>
+		</g>
+	</g>
+</svg>

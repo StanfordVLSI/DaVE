@@ -1,0 +1,25 @@
+#!/usr/bin/env python
+
+import os
+from dave.mgenero.mgenero import ModelCreator
+
+generic_module_name = 'amplifier'
+dut = 'ctle2'
+
+cfg_f = "circuit.cfg" # user configuration of interface template
+ifc_f = os.path.join(os.environ['DAVE_SAMPLES'],'mGenero/template/{0}/{0}.ifc.yaml'.format(generic_module_name)) # interface template
+mdl_template = os.path.join(os.environ['DAVE_SAMPLES'],'mGenero/template/{0}/{1}'.format(generic_module_name,'%s.template.sv' % generic_module_name)) # model template
+test_template = os.path.join(os.environ['DAVE_SAMPLES'],'mGenero/template/{0}/{1}'.format(generic_module_name,'%s.test.template.cfg' % generic_module_name)) # test template
+mdl_i_dst_file = '%s.intermediate.v' % dut  # intermediate verilog model (before back-annotation)
+mdl_dst_file = '%s.v' % dut  # intermediate verilog model (before back-annotation)
+test_dst_file = 'test.cfg'
+user_test_file = 'user.cfg'
+#user_test_file = '' # customization of test template
+
+
+m = ModelCreator(cfg_f, ifc_f)
+m.generate_model(mdl_template, mdl_i_dst_file)
+m.generate_test(test_template, test_dst_file, user_test_file)
+m.run_characterization(no_processes=4, sim_cfg='sim.cfg')
+m.backannotate_model(mdl_i_dst_file, mdl_dst_file, './.mProbo/extracted_linear_model.yaml')
+m.run_equivalence(no_processes=4, sim_cfg='sim.cfg')

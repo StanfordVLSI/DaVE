@@ -1,0 +1,43 @@
+// AC simulation
+
+`include "mLingua_pwl.vh"
+
+module test;
+
+timeunit 1fs;
+timeprecision 1fs;
+
+`get_timeunit
+
+pwl @signal_in, @signal_out;
+real max_amp, min_amp;
+real out_diff;
+integer fid;
+initial max_amp = 0;
+
+pwl_sin #(.etol(@sin_etol), .freq(@(ac_frequency)), .amp(@(sine_amp)), .offset(@(sine_dc)), .ph(0.0)) pwl_sin(.out(@signal_in));
+
+// user code here
+@vlog_code  
+
+always @@(`pwl_event(@signal_out)) begin
+  if (`get_time >= @(start_time+skip_cycle/ac_frequency)) begin
+    out_diff = abs(@(signal_out).a-@(out_op));
+    if (out_diff > max_amp) max_amp = out_diff;
+  end
+end
+
+initial begin
+  fid = $fopen("meas_ac.txt");
+  `delay(@(start_time));
+  `delay(1.0/@(ac_frequency)*@(skip_cycle));
+  `delay(1.0/@(ac_frequency)*@(no_cycle));
+  $fstrobe(fid, "%e", max_amp);
+  #1;
+  $fclose(fid);
+  $finish;
+end
+
+`run_wave
+
+endmodule

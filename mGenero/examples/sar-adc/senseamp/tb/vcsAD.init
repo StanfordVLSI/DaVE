@@ -1,0 +1,4 @@
+choose xa -n comparator.sp -c xa.cfg  ;
+use_spice -cell comparator;
+bus_format <%d> ;
+

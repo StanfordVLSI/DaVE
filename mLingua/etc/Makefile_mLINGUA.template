@@ -1,0 +1,67 @@
+# Makefile for running simulation
+#
+# available make target
+# 1. make run  : run simulation w/o dumping waveforms
+# 2. make wave : run simulation w/ dumping waveforms
+
+
+include $(mLINGUA_DIR)/etc/vcs_flag.mk
+include $(mLINGUA_DIR)/etc/ncvlog_flag.mk
+RND_SEED := $(strip $(shell head -4 /dev/urandom |od -N 4 -D -A n| awk '{print $1}')) # random seed generation
+
+########## USER SECTION ###########
+#TRAN_TIME := 100ns # transient simulation time (change the value as you wish)
+#TIME_SCALE := 1ps/1ps # time scale (change the value as you wish)
+#PP_CMD := python plot_abserr.py # post-processing script
+#SIMULATOR := $(mLINGUA_SIMULATOR)
+####### END OF USER SECTION #######
+
+#TOP_MODULE := test
+#VERILOG_FILES := $(TOP_MODULE).v
+
+#NCVLOG_CMD := ncverilog -top $(TOP_MODULE) $(VERILOG_FILES) $(mLINGUA_NCVLOG_FLAGS) -y ../model +incdir+../model +nctimescale+$(TIME_SCALE) -input hdl.tcl +ncaccess+r -profile -sem2009 -svseed random
+#VCS_CMD := vcs -top $(TOP_MODULE) $(VERILOG_FILES) $(mLINGUA_VCS_FLAGS) -y ../model -timescale=$(TIME_SCALE) +prof
+
+
+# default rule:
+all: run
+
+run:
+	@echo ""
+	@echo Now Compiling in $(SIMULATOR)
+	@echo ==================================================
+ifeq ($(strip $(SIMULATOR)),vcs)
+	$(VCS_CMD) 
+	./simv +vcs+finish+$(TRAN_TIME) -l simv.log +seed=$(RND_SEED)
+else
+	@echo 'database -open waves.shm -into waves.shm -default' > hdl.tcl 
+	@echo 'run $(TRAN_TIME)' >> hdl.tcl 
+	@echo 'exit' >> hdl.tcl 
+	$(NCVLOG_CMD) 
+endif	
+
+ifneq ($(strip $(PP_CMD)),)
+	$(PP_CMD)
+endif
+
+wave:
+	@echo ""
+	@echo Now Compiling in $(SIMULATOR) with dumping waves
+	@echo ==================================================
+ifeq ($(strip $(SIMULATOR)),vcs)
+	$(VCS_CMD) 
+	./simv +vcs+finish+$(TRAN_TIME) -l simv.log +wave +vpdbufsize+200 +vpdfileswitchsize+200 +seed=$(RND_SEED)
+else
+	@echo 'database -open waves.shm -into waves.shm -default' > hdl.tcl 
+	@echo 'probe -creat -shm -all -dynamic -depth all -memories' >> hdl.tcl
+	@echo 'run $(TRAN_TIME)' >> hdl.tcl 
+	@echo 'exit' >> hdl.tcl 
+	$(NCVLOG_CMD) 
+endif	
+
+ifneq ($(strip $(PP_CMD)),)
+	$(PP_CMD)
+endif
+
+clean:
+	\rm -rf simv* csrc ucli.key vc_hdrs.h simv.log DVEfiles *vpd vcs.prof *.txt INCA_libs waves.shm ncverilog.log hdl.tcl ncprof.out shm.prof ncverilog.key .simvision *.eps

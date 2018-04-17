@@ -1,0 +1,42 @@
+Installation of DaVEnv
+======================
+The following guides you to install DaVEnv.
+
+Install Anaconda Python
+-----------------------
+We use Python 2.7 and some 3rd-party Python libraries, which are not contained in the main installation file. To install the depedencies, we suggest to use ANACONDA Python distribution which you can download and install at https://www.continuum.io/. 
+
+Set up Anaconda Environment for DaVEnv
+--------------------------------------
+
+$ conda create --name YOUR_ENV_NAME python=2
+
+where YOUR_ENV_NAME is an environment name you want to have. Please note the directory name "your_anaconda_python_directory/envs/YOUR_ENV_NAME" which is needed when installing the main tool.
+
+
+Install DaVEnv
+--------------
+: "install_DaVE_YYYY-MM-DD.sh" (where YYYY is year, MM is month, and DD is day when the package file is created) is a self-extractable file. Please make sure the file is executable, or do "$ chmod +x install_DaVE_YYYY-MM-DD.sh".
+
+The installation is simply done by typing
+
+$ ./install_DaVE_YYYY-MM-DD.sh
+
+and follow the instructions.
+
+Install Python packages using conda
+-----------------------------------
+To install 3rd-party Python libraries used for the tool, we provide a list of the libraries and you can easily install them as follows.
+
+The first step is to activate your conda environment
+
+$ source YOUR_CONDA_DIR/bin/activate YOUR_ENV_NAME
+
+The next is to install the required packages using conda and pip
+
+$ conda install alabaster Babel configobj Cython docutils Jinja2 numpy scipy pandas patsy Pygments pyyaml sphinx statsmodels sympy mock nose matplotlib
+
+$ pip install nuitka BitVector empy lmfit Pmw PyDOE texttable
+
+where YOUR_CONDA_DIR is the anaconda installation directory, YOUR_ENV_NAME is an environment name which can be replaced with your own environment your want and ${DAVE_INST_DIR} is the installation directory of DaVEnv. 
+

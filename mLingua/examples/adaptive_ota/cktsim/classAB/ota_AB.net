@@ -1,0 +1,37 @@
+
+** Library name: adaptive_ota
+** Cell name: ota_w_bias
+** View name: schematic
+.subckt ota_w_bias ib inm inp iout out vdda
+mfb iout vp2 vdda vdda pmos L=4 W=8 M=20
+m2 vp2 vp2 vdda vdda pmos L=4 W=8 M=2
+mo out vp vdda vdda pmos L=4 W=8 M=5
+mob vp vp vdda vdda pmos L=4 W=8 M=5
+m0 net8 vp vdda vdda pmos L=4 W=8 M=1
+madd vp2 vn 0 0 nmos L=4 W=4 M=2
+mdiff vn vn 0 0 nmos L=4 W=4 M=2
+m1 net8 ib 0 0 nmos L=4 W=4 M=3
+mim out inm tail 0 nmos L=4 W=4 M=5
+msrc tail ib 0 0 nmos L=4 W=4 M=20
+mip vp inp tail 0 nmos L=4 W=4 M=5
+r1 net8 vn 10e3
+.ends ota_w_bias
+** End of subcircuit definition.
+
+** Library name: adaptive_ota
+** Cell name: bias
+** View name: schematic
+.subckt bias ib ib_d ib_s
+mbias ib_s ib_s 0 0 nmos L=4 W=4 M=20
+r0 ib_s ib_d 10e-3
+r1 ib_s ib 10e-3
+.ends bias
+** End of subcircuit definition.
+
+** Library name: adaptive_ota
+** Cell name: ota_AB
+** View name: schematic
+.subckt ota_AB inp inm ibias vdda out
+xiamp ib inm inp ib_fb out vdda ota_w_bias
+xibias ib ib_fb ibias bias
+.ends

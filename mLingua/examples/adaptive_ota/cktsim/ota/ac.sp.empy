@@ -1,0 +1,41 @@
+* Test
+
+.protect
+.inc '../lib/cktlib.lib'
+.unprotect
+
+.param suph = 3.6
+.param vcm = 2.0
+.param iib = @iib
+.param vvd = 0.0
+
+.option accurate
+
+.option post
+.opt scale = 0.2u
+
+.include '../classAB/ota_AB.net'
+xdut xib inm inp iout out vdda ota_w_bias
+xibias xib netxx ib bias
+mload iout iout 0 0 nmos L=4 W=4 M=20
+
+vdda vdda gnd 'suph' 
+ib vdda ib 'iib'
+
+vinp inp gnd dc 'vcm' ac 1
+cload out gnd 1.2p
+
+lfb inm out 1g
+cfb inm gnd 1
+
+$.ac dec 50 10 5g sweep vcm 1.0 3.0 0.02
+$.dc vdda 'suph' 'suph+0.1' 0.5 sweep vcm 1.0 3.0 0.02
+.ac dec 50 10 5g sweep vcm 1.0 3.0 0.1
+.dc vdda 'suph' 'suph+0.1' 0.5 sweep vcm 1.0 3.0 0.1
+.probe ac vm(out) vp(out)
+.probe dc i(xdut.msrc)
+
+.measure ac dcgain find vm(out) at=10
+.measure dc islew find i(xdut.msrc) at='suph'
+
+.end

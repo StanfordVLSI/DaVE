@@ -1,0 +1,97 @@
+// Bidirectional Connect Module
+//
+// Version 1a, 1 June 04
+//
+// Olaf Zinke
+// Downloaded from The Designer's Guide Community (www.designers-guide.org).
+// Post any questions on www.designers-guide.org/Forum.
+// Taken from "The Designer's Guide to Verilog-AMS" by Kundert & Zinke.
+// Chapter 4, Listing 19.
+
+`include "disciplines.vams"
+
+connectmodule bidir(a, d);
+    parameter real v0 = 0.0;			// output voltage for a logic 0 (V)
+    parameter real v1 = 1.0;			// output voltage for a logic 1 (V)
+    parameter real vx = (v1-v0)/2.0;			// output voltage for a logic x (V)
+    parameter real vz = v1;			// output voltage for a logic z (V)
+    parameter real r0 = 100 from (0:inf);	// output resistance for a logic 0 (Ohms)
+    parameter real r1 = 100 from (0:inf);	// output resistance for a logic 1 (Ohms)
+    parameter real rx = 20 from (0:inf);	// output resistance for a logic x (Ohms)
+    parameter real rz = 1M from (0:inf);	// output resistance for a logic z (Ohms)
+    parameter real tr=20p from [0:inf);		// rise time (s)
+    parameter real tf=20p from [0:inf);		// fall time (s)
+    parameter real vl = (v1-v0)*1/3+v0;			// maximum voltage of a logic 0 (V)
+    parameter real vh = (v1-v0)*2/3+v0;			// minimum voltage of a logic 1 (V)
+    parameter real maxzi = 0.1u;		// absolute max current allowed in HiZ state
+    parameter real xdelay = 1;			// time in the Xrange before dout gets x
+    parameter real zdelay = 0.5 * xdelay;	// max time of current > maxzi before
+    parameter real vtol=(v1-v0)/100 from (0:(vh-vl)/4]; // voltage tolerance
+    parameter real ttol=tr/4;                       // time tolerance of crossing
+						// going out of z state
+    inout a, d;
+    electrical a;
+    logic d;
+    reg dout;
+    logic dout;
+    real v, r;
+    integer vstate;
+    reg istate, inXrange, outOfZcurrent;
+    assign d = dout;
+    initial begin
+	dout = 1'bz;			// set the digital output to z until analog voltage is resolved
+	vstate = 2; istate = 0; inXrange = 0; outOfZcurrent = 0;
+	case (d)
+	    1'b0: begin v = v0; r = r0; end
+	    1'b1: begin v = v1; r = r1; end
+	    1'bx: begin v = vx; r = rx; dout=1'bx; end
+	    1'bz: begin v = vz; r = rz; end
+	endcase
+    end
+
+    always @d begin
+	case(d)
+	    1'b0: begin v = v0; r = r0; end
+	    1'b1: begin v = v1; r = r1; end
+	    1'bx: begin v = vx; r = rx; dout=1'bx; end
+	    1'bz: begin v = vz; r = rz; end
+	endcase
+    end
+
+    always @(above(V(a) - vh),ttol,vtol) begin vstate = 1; inXrange = 0; end
+    always @(above(vh - V(a)),ttol,vtol) inXrange = 1;
+    always @(above(V(a) - vl),ttol,vtol) inXrange = 1;
+    always @(above(vl - V(a)),ttol,vtol) begin vstate = 3; inXrange = 0; end
+
+    always @(posedge inXrange) begin : XRangeDelay
+	#xdelay
+	vstate = 2;
+	inXrange = 0;
+    end
+    always @(negedge inXrange) disable XRangeDelay;
+
+    always @(posedge outOfZcurrent) begin : outOfZCurrentDelay
+	#zdelay
+	istate=1;
+	outOfZcurrent=0;
+    end
+    always @(negedge outOfZcurrent) disable outOfZCurrentDelay;
+
+    always @(above(abs(I(a)) - maxzi)) outOfZcurrent = 1;
+    always @(above(maxzi - abs(I(a)))) begin
+	istate=0;
+	outOfZcurrent=0;
+    end
+
+    always @(vstate or istate or d) begin
+	case(vstate)
+	    1: dout = (d === 1'bx) ? 1'bx : 1'b1;
+	    2: dout = ((istate === 1'b0) & (d===1'bz)) ? 1'bz : 1'bx;
+	    3: dout = (d === 1'bx) ? 1'bx : 1'b0;
+	endcase
+    end
+
+    analog begin
+	V(a) <+ transition(v,0,tr,tf) + transition(r,0,tr,tf) * I(a);
+    end
+endmodule

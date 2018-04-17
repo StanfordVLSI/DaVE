@@ -1,0 +1,19 @@
+dave-box: /home/johndoe > mProbo -h
+usage: mProbo [-h] [-x] [-r RPT] [-t TEST] [-s SIM] [-p PROCESS] [-c]
+              [-w WORKDIR] [-g]
+
+Run AMS model equivalence checker.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -x, --extract         Extraction mode: Characterize golden model.
+  -r RPT, --rpt RPT     Report file name in HTML format. Default is
+                        "report.html"
+  -t TEST, --test TEST  Test configuration file. Default is "test.cfg"
+  -s SIM, --sim SIM     Simulation configuration file. Default is "sim.cfg"
+  -p PROCESS, --process PROCESS
+                        Number of processes. Default is 1
+  -c, --use-cache       Use cached simulation data
+  -w WORKDIR, --workdir WORKDIR
+                        Working directory. Default is the current directory
+  -g, --gui             Start GUI application

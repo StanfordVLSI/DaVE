@@ -1,0 +1,3 @@
+TXF fitting from step response
+==============================
+There are two scripts: ``filter_estimator.py`` and ``estimate_filter.py``. The former one fitts TXF in freq. domain after doing FFT of a step response. The later is fit step response directly. We recommend to use this. 

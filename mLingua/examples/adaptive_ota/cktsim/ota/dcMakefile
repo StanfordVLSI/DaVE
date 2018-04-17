@@ -1,0 +1,9 @@
+# Makefile for running ac simulation
+
+deck   = dc
+
+all:
+	hspice $(deck).sp | tee $(deck).lis
+
+clean:
+	\rm -rf *.lis *.ic* *.op* *.tr* *.st* *.su* *.sw* *.ac* *.pa* *.pvadir *.valog *.ns* logFile sxcmd.log *.dat *.png

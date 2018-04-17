@@ -1,0 +1,357 @@
+from StringIO import StringIO
+
+# up to 2 inputs, the output is interpolated
+# more than 2 inputs, the output is taken from the lower corner value of the lut
+
+lutmd_template = StringIO("""
+
+/****************************************************************
+ Module: @(module_name) 
+ Description: 
+ @(description)
+
+-----------------------------------------------------------------
+ This is automatically generated multi-dimensional lookup table 
+ model for choosing parameters of piecewise linear model
+ depending on DC operating point
+
+ Here are some restrictions:
+  - All inputs are in PWL waveform format
+  - All outputs are real (parameters to other block)
+
+-----------------------------------------------------------------
+ Copyright (c) 2014 by Byong Chan Lim. All rights reserved.
+
+ The information and source code contained herein is the property
+ of Byong Chan Lim, and may not be disclosed or reproduced
+ in whole or in part without explicit written authorization from
+ Byong Chan Lim.
+-----------------------------------------------------------------
+****************************************************************/
+
+@# TODO: Indexing in SVerilog is computationally expensive, and I think there is a way to improve this.
+
+@{
+input_ports = index_order
+output_ports = y.keys()
+nDim = len(input_ports)
+inSize = [len(x[p]) for p in input_ports]
+}@
+
+module @(module_name) (
+  input pwl @(', '.join(input_ports)),
+  output real @(', '.join(output_ports))
+);
+
+// time scale can be changed as you want
+timeunit 1fs;
+timeprecision 1fs;
+
+
+/////////////////////
+// Look-up table info
+/////////////////////
+parameter integer nDim = @(nDim);
+@{
+for i, p in enumerate(input_ports):
+  print 'parameter integer x_%s_Size = %d;' %(p, inSize[i])
+}@
+@[for p in input_ports]real lx_@(p)[x_@(p)_Size-1:0]; 
+@[end for]
+@{
+xidx_str = ''
+for p in input_ports:
+  xidx_str += '[%s]' %('x_'+p+'_Size')
+
+for p in output_ports:
+  print 'real ly_%s%s;' %(p, xidx_str)
+}@
+
+/////////////////////
+// Look-up table data
+/////////////////////
+initial begin
+
+@{
+for p in input_ports: 
+  for i,d in enumerate(x[p]):
+    print '%s[%d] = %f;' %('lx_'+p, i, d)
+
+# Do this intelligently
+def y_indexing(i, pSize):
+  ostr = ''
+  k=0
+  for idx, p in enumerate(pSize):
+    if idx != (len(pSize)-1):
+      j = reduce(lambda x, y: x*y, pSize[idx+1:])
+      k = i / j
+      ostr += '[%d]' %(k)
+      i -= j*k
+    else:
+      ostr += '[%d]' %(i % p)
+  return ostr
+
+for p in output_ports:
+  for i in range(len(y[p])):
+    print 'ly_%s%s = %e;' %(p, y_indexing(i, inSize), y[p][i])
+}@
+
+end
+
+
+`protect
+//////////////
+// Process LUT
+//////////////
+
+`get_timeunit
+PWLMethod pm=new;
+
+typedef struct {
+  integer ob; // out of bound, -1: less than min, +1: more than max, 0: within region
+  integer index;  // index number
+} lut_region_index;
+
+reg event_in=1'b0;
+
+pwl @(', '.join([p+'_prev' for p in input_ports]));
+real @(', '.join([p+'0' for p in input_ports]));
+lut_region_index @(', '.join(['index_'+p for p in input_ports]));
+
+event wakeup;
+
+time t_prev, dTm;
+time dT=1;
+real t;
+reg  en_interpolation=@("1'b1" if interpolation else "1'b0");  // enable interpolation if input dimension is less than 3 and in bound.
+
+real @(', '.join(['dt_'+p for p in input_ports]));
+
+real dTr;
+
+@{
+if nDim == 2:
+  print 'real x00, x01, x0, x10, x11, x1, f00, f01, f10, f11;'
+elif nDim == 3:
+  print 'real x00, x01, x0, x10, x11, x1, x20, x21, x2, f000, f001, f010, f011, f100, f101, f110, f111;'
+}@
+
+initial #1 ->> wakeup;
+
+@{
+evt_sense = ' or '.join(['`pwl_event('+p+')' for p in input_ports])
+evt_df    = ' || '.join(['`pwl_check_diff(%s, %s_prev)' %(p, p) for p in input_ports])
+evt_str   = ' '.join(['%s_prev = %s;' %(p, p) for p in input_ports])
+evt_eval  = '\\n    '.join(['%s0 = pm.eval(%s, t);' %(p, p) for p in input_ports])
+evt_fidx  = '\\n    '.join(['index_%s = find_index_%s_%s(%s0);' %(p, p, module_name, p) for p in input_ports])
+
+
+# calculate output response expression
+idx_ref   = ''.join(['[index_%s.index]' %p for p in input_ports])
+if nDim == 1:
+  tpl='''
+  if (!en_interpolation) {output} = ly_{output}[index_{input}.index];
+  else 
+    {output} = ((lx_{input}[index_{input}.index+1]-{input}0)*ly_{output}[index_{input}.index]+({input}0-lx_{input}[index_{input}.index])*ly_{output}[index_{input}.index+1])/(lx_{input}[index_{input}.index+1]-lx_{input}[index_{input}.index]);
+  '''
+  eval_out  = '\\n    '.join([tpl.format(input=input_ports[0], output=p) for p in output_ports])
+
+elif nDim == 2:
+  tpl='''
+    if (!en_interpolation) {output} = ly_{output}[index_{input0}.index][index_{input1}.index];
+    else begin
+      x00 = lx_{input0}[index_{input0}.index];
+      x01 = lx_{input0}[index_{input0}.index+1];
+      x0  = {input0}0;
+      x10 = lx_{input1}[index_{input1}.index];
+      x11 = lx_{input1}[index_{input1}.index+1];
+      x1  = {input1}0;
+      f00 = ly_{output}[index_{input0}.index][index_{input1}.index];
+      f01 = ly_{output}[index_{input0}.index][index_{input1}.index+1];
+      f10 = ly_{output}[index_{input0}.index+1][index_{input1}.index];
+      f11 = ly_{output}[index_{input0}.index+1][index_{input1}.index+1];
+      {output} = ( (x01-x0)*(x11-x1)*f00+(x01-x0)*(x1-x10)*f01+(x0-x00)*(x11-x1)*f10+(x0-x00)*(x1-x10)*f11 )/(x01-x00)/(x11-x10);
+    end'''
+  eval_out  = '\\n    '.join([tpl.format(input0=input_ports[0], input1=input_ports[1], output=p) for p in output_ports])
+elif nDim == 3:
+  tpl='''
+    if (!en_interpolation) {output} = ly_{output}[index_{input0}.index][index_{input1}.index][index_{input2}.index];
+    else begin
+      x00 = lx_{input0}[index_{input0}.index];
+      x01 = lx_{input0}[index_{input0}.index+1];
+      x0  = {input0}0;
+      x10 = lx_{input1}[index_{input1}.index];
+      x11 = lx_{input1}[index_{input1}.index+1];
+      x1  = {input1}0;
+      x20 = lx_{input2}[index_{input2}.index];
+      x21 = lx_{input2}[index_{input2}.index+1];
+      x2  = {input2}0;
+      f000 = ly_{output}[index_{input0}.index][index_{input1}.index][index_{input2}.index];
+      f001 = ly_{output}[index_{input0}.index][index_{input1}.index][index_{input2}.index+1];
+      f010 = ly_{output}[index_{input0}.index][index_{input1}.index+1][index_{input2}.index];
+      f011 = ly_{output}[index_{input0}.index][index_{input1}.index+1][index_{input2}.index+1];
+      f100 = ly_{output}[index_{input0}.index+1][index_{input1}.index][index_{input2}.index];
+      f101 = ly_{output}[index_{input0}.index+1][index_{input1}.index][index_{input2}.index+1];
+      f110 = ly_{output}[index_{input0}.index+1][index_{input1}.index+1][index_{input2}.index];
+      f111 = ly_{output}[index_{input0}.index+1][index_{input1}.index+1][index_{input2}.index+1];
+      {output} = ( (x01-x0)*(x11-x1)*(x21-x2)*f000 + (x01-x0)*(x11-x1)*(x2-x20)*f001 + (x01-x0)*(x1-x10)*(x21-x2)*f010 + (x01-x0)*(x1-x10)*(x2-x20)*f011 + (x0-x00)*(x11-x1)*(x21-x2)*f100 + (x0-x00)*(x11-x1)*(x2-x20)*f101 + (x0-x00)*(x1-x10)*(x21-x2)*f110 + (x0-x00)*(x1-x10)*(x2-x20)*f111  )/(x01-x00)/(x11-x10)/(x21-x20);
+    end'''
+  eval_out  = '\\n    '.join([tpl.format(input0=input_ports[0], input1=input_ports[1], input2=input_ports[2], output=p) for p in output_ports])
+else:
+  eval_out  = '\\n    '.join(['%s = ly_%s%s;' %(p, p, idx_ref) for p in output_ports])
+
+dt_cal    = '\\n    '.join(['dt_%s = calculate_dt_%s_%s(%s0, index_%s.index, %s.b);' %(p, p, module_name, p, p, p) for p in input_ports])
+def get_minstr(ports):
+  if len(ports) == 1:
+    return 'dt_'+ports[0]
+  else:
+    return 'min(dt_%s, %s)' %(ports[0], get_minstr(ports[1:]))
+
+dt_min_str = 'dTr = ' + get_minstr(input_ports) + ';'
+}@
+
+always @@( @(evt_sense) or wakeup ) begin
+  dTm = $realtime - t_prev;
+  event_in = @evt_df;
+  if (((dT==dTm)&&(dTm>=1)) || event_in) begin
+    en_interpolation = @("1'b1" if (nDim < 4 and interpolation) else "1'b0");
+    if (event_in) begin
+      @evt_str
+    end
+    t = `get_time; // get current time
+
+    // evaluate inputs at t
+    @evt_eval         
+
+
+    // find region
+    @evt_fidx
+
+@{
+tpl  = '''
+    // display warning if the input is out of region
+    if (index_{input}.ob != 0) begin
+      $display ("[Warning] At time=%.3f [psec], the input port {input}=%.f in {mname} module is out of bound !!!. Interpolation is disabled !!!", $realtime*TU*1e12, {input}0);
+      en_interpolation = 1'b0;
+    end
+'''
+if suppress_ob_message == False:
+  for p in input_ports: 
+    print tpl.format(input=p, mname=module_name)
+}@
+
+    // calculate next event time interval (dt) for each input
+    @dt_cal
+
+    // select min(dt)
+    @dt_min_str
+    
+    if (dTr < 1) begin
+      dT = time'(dTr/TU);
+      ->> #(dT) wakeup; // schedule an event after dT
+      t_prev = $realtime;
+    end
+
+@{
+if interpolation and discretized:
+  print "     // snap input values to user-defined grid if interpolation is true and input_resolution is set"
+  for i, p in enumerate(input_ports):
+    print "     {input}0 = int'({input}0/{res})*{res};".format(input=p, res=input_resolution[i])
+}@
+
+    // retrieve outputs from LUT
+    // If # of inputs is more than three, I want this calculation simple.
+    // Otherwise, I'll do multilinear interpolation
+    @eval_out
+
+  end
+end
+
+// for given value, find the index of LUT (region)
+@{
+tpl='''
+function lut_region_index find_index_{input}_{mname} (real value);
+int idx[$];
+int index;
+begin
+  if (value <= (lx_{input}[0])) return {a}-1,0{b};
+  if (value >= (lx_{input}[x_{input}_Size-1])) return {a}1,x_{input}_Size-1{b};
+  index = index_{input}.index;
+  if ((value>=lx_{input}[index]) && (value<lx_{input}[index+1])) begin
+    return {a}0,index{b};
+  end
+  else if ((value>=lx_{input}[index-1]) && (value<lx_{input}[index])) begin
+    index = index - 1;
+    return {a}0,index{b};
+  end
+  else if ((value>=lx_{input}[index+1]) && (value<lx_{input}[index+2])) begin
+    index = index + 1;
+    return {a}0,index{b};
+  end
+  else 
+    idx = lx_{input}.find_index with (item > value);
+  return {a}0,idx[0]-1{b};
+end
+endfunction
+'''
+for p in input_ports: 
+  print tpl.format(input=p, mname=module_name, a="'{", b="}")
+}@
+
+// calculate the next event where inflection of transfer curve 
+// for given input (value, slope)
+@{
+if nDim > 3:
+  cur_val = '''
+  cur_val = lx_{input}[index];
+  '''
+else:
+  cur_val = '''
+  cur_val = value;
+  '''
+
+tpl='''
+function real calculate_dt_{input}_{mname}(real value, integer index, real slope);
+real sgn_sl;
+real cur_val, nxt_val;
+real dt;
+begin
+  sgn_sl = sgn(slope); '''
+tpl += cur_val;
+
+tpl += '''nxt_val = cur_val;
+  if ( (index == 0) && (sgn_sl<0) ) return 100;
+  else if ( (index == (x_{input}_Size-1)) && (sgn_sl>0) ) return 100;
+  else begin
+    if (sgn_sl < 0) nxt_val = lx_{input}[index-1];
+    else if (sgn_sl > 0) nxt_val = lx_{input}[index+1];
+  end
+
+  if (slope==0) return 100;
+  else begin
+    dt = (nxt_val-cur_val)/slope;
+    if ((dt>=TU)) return dt;
+    else return TU;
+  end
+end
+endfunction
+'''
+for p in input_ports: 
+  print tpl.format(input=p, mname=module_name)
+
+}@
+
+/***************************************************************
+ Copyright (c) 2014 by Byong Chan Lim. All rights reserved.
+
+ The information and source code contained herein is the property
+ of Byong Chan Lim, and may not be disclosed or reproduced
+ in whole or in part without explicit written authorization from
+ Byong Chan Lim.
+***************************************************************/
+
+`endprotect
+
+endmodule // end of "@module_name" module
+
+""")

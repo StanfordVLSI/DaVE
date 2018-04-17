@@ -1,0 +1,405 @@
+.. _samplevlog:
+
+**********************
+Sample Verilog Library
+**********************
+
+This chapter lists the function of sample Verilog modules supplied along with the checker tool. Every module has written in both Verilog and Verilog-AMS and the codes are pin accurate to each other.
+
+Module Name Convention
+======================
+
+There is a naming convention for some Verilog module libraries to register and use in the GUI testbench editor. Specifically, a module that takes or produces analog signal(s) needs such a convention. That is, a Verilog module name should have a suffix *_datatype* where *datatype* is the analog signal type of a module's port. For example, the component name of a DC voltage source in the GUI testbench editor might be *vdc*. Depending on whether the input/output signals of a Verilog module is *pwl* or *real*, different modules named *vdc_pwl.v* and *vdc_real.v* exist although their functionalities are the same. If a module is taking or outputting a digital signal, it does not have to have a suffix.
+
+The datatype of an analog signal could be different depending on models and proper driver/measurement Verilog modules for testing a model should be chosen. Since it is bothersome to create different components depending on its signal datatype in the GUI testbench editor, there only exists a component named without the suffix like Verilog modules. Instead, a component library should have a user field to set the signal datatype such as *pwl*, *real*, etc. Then, the generated Verilog testbench from the GUI editor automatically add the signal datatype as a suffix to instantiate the corresponding Verilog modules with the required signal datatype. For example, the signal type field of a *vdc* component is set to *pwl* in the GUI editor, the editor will instantiate *vdc_pwl* module in Verilog.
+
+
+Summary of Sample Verilog Modules
+=================================
+
+The following table lists all available Verilog modules.
+
+Note on Signal Datatype
+=======================
+
+In Verilog, there is no notion of signal disciplines such as voltage, current, etc, while there is in Verilog-AMS. Since we do care the direction of a current flow, we represent a current signal by its sign and magnitude in Verilog. Therefore, we explicitly declares the signal discipline of a port for clarification if necessary.
+
+
+Digital Stimulus
+================
+
+.. _mod_bitvector:
+
+Module: bitvector
+-----------------
+
+This generates the static value of a logic vector. If this is connected to an electrical wire in AMS mode, the value is determined by the supplied connect module. For more information, refer to Cadence's Virtuoso AMS Simulator User Guide.
+
+port
+~~~~
+
++-----------+----------+--------+------------------------------+
+| Port name | Datatype | I/O    | Description                  |
++===========+==========+========+==============================+
+| out       | logic    | output | Outputs a static logic value |
++-----------+----------+--------+------------------------------+
+| outb      | logic    | output | Complement of *out*          |
++-----------+----------+--------+------------------------------+
+
+parameter
+~~~~~~~~~
+
++----------------+----------+-------------------------------+
+| Parameter name | Datatype | Description                   |
++================+==========+===============================+
+| bit_width      | integer  | Bit width of *out* and *outb* |
++----------------+----------+-------------------------------+
+| value          | integer  | Logic value of *out*          |
++----------------+----------+-------------------------------+
+
+example
+~~~~~~~
+
+In the example below, *o* is 3'b101, and *ob* is 3'b010 ::
+
+  bitvector #(.bit_width(3), .value(5)) xdriver (.out(o), .outb(ob));
+ 
+
+.. _mod_clock:
+
+Module: clock
+-------------
+
+This generates a clock signal and its complement.
+
+port
+~~~~
+
++-----------+----------+--------+------------------------+
+| Port name | Datatype | I/O    | Description            |
++===========+==========+========+========================+
+| ckout     | logic    | output | Outputs a clock signal |
++-----------+----------+--------+------------------------+
+| ckoutb    | logic    | output | Complement of *ckout*  |
++-----------+----------+--------+------------------------+
+
+parameter
+~~~~~~~~~
+
++----------------+----------+-------------------------+
+| Parameter name | Datatype | Description             |
++================+==========+=========================+
+| b0             | bit      | Starting logic value    |
++----------------+----------+-------------------------+
+| freq           | real     | Clock frequency         |
++----------------+----------+-------------------------+
+| duty           | real     | Duty cycle              |
++----------------+----------+-------------------------+
+| td             | real     | Initial delay in second |
++----------------+----------+-------------------------+
+
+example
+~~~~~~~
+
+In the example below, *o* is a clock signal of which frequency is 5 MHz and duty cycle is set to 0.4. Its value at t=0 sec is 1'b1 and it starts toggling from t=10 nsec. ::
+
+  clock #(.b0(1'b1), .freq(5e6), .duty(0.4), .td(10e-9)) xdriver (.ckout(o), .ckoutb(ob));
+
+.. _mod_clock_2phase:
+
+Module: clock_2phase
+--------------------
+
+This generates two clocks where their common-mode/differential-mode phases are adjustable. Their frequencies and duty cycles are the same.
+
+port
+~~~~
+
++-----------+----------+--------+------------------------+
+| Port name | Datatype | I/O    | Description            |
++===========+==========+========+========================+
+| cko_lead  | logic    | output | Phase lead clock       |
++-----------+----------+--------+------------------------+
+| ckob_lead | logic    | output | Complement of cko_lead |
++-----------+----------+--------+------------------------+
+| cko_lag   | logic    | output | Phase lagged clock     |
++-----------+----------+--------+------------------------+
+| ckob_lag  | logic    | output | Complement of cko_lag  |
++-----------+----------+--------+------------------------+
+
+parameter
+~~~~~~~~~
+
++----------------+----------+-----------------------------------+
+| Parameter name | Datatype | Description                       |
++================+==========+===================================+
+| freq           | real     | Clock frequency                   |
++----------------+----------+-----------------------------------+
+| duty           | real     | Duty cycle                        |
++----------------+----------+-----------------------------------+
+| ph_cm          | real     | Common-mode phase in radian       |
++----------------+----------+-----------------------------------+
+| ph_diff        | real     | Differential-mode phase in radian |
++----------------+----------+-----------------------------------+
+
+example
+~~~~~~~
+
+In the example below, *Q* clock leads *I* by 0.2 radian. ::
+
+  clock_2phase #(.freq(2e9), .duty(0.5), .ph_cm(1.0), .ph_diff(-0.2)) xdriver (.cko_lead(I), .cko_lag(Q));
+
+.. _mod_phase2ck:
+
+Module: phase2ck
+----------------
+
+This is an event-driven model of phase-to-clock converter. The datatype of the phase input is *real* in Verilog and *wreal* in Verilog-AMS. The duty cycle of output clocks is always 0.5.
+
+port
+~~~~
+
++-----------+------------+--------+-----------------------+
+| Port name | Datatype   | I/O    | Description           |
++===========+============+========+=======================+
+| phin      | real/wreal | input  | Phase in radian       |
++-----------+------------+--------+-----------------------+
+| ckout     | logic      | output | clock output          |
++-----------+------------+--------+-----------------------+
+| ckoutb    | logic      | output | Complement of *ckout* |
++-----------+------------+--------+-----------------------+
+
+parameter
+~~~~~~~~~
+
++----------------+----------+-----------------+
+| Parameter name | Datatype | Description     |
++================+==========+=================+
+| freq           | real     | Clock frequency |
++----------------+----------+-----------------+
+
+example
+~~~~~~~
+
+This generates *cko* clock for given phase input, *phin*. ::
+
+  phase2ck #(.freq(200e6)) xdriver (.phin(phin), .ckout(cko), .ckoutb(ckob));
+
+.. _mod_pulse:
+
+Module: pulse
+-------------
+
+This generates a pulse signal and its complement.
+
+port
+~~~~
+
++-----------+----------+--------+---------------------+
+| Port name | Datatype | I/O    | Description         |
++===========+==========+========+=====================+
+| out       | logic    | output | pulse output        |
++-----------+----------+--------+---------------------+
+| outb      | logic    | output | Complement of *out* |
++-----------+----------+--------+---------------------+
+
+parameter
+~~~~~~~~~
+
++----------------+----------+--------------------------+
+| Parameter name | Datatype | Description              |
++================+==========+==========================+
+| b0             | bit      | Starting logic value     |
++----------------+----------+--------------------------+
+| td             | real     | Initial delay of a pulse |
++----------------+----------+--------------------------+
+| tw             | real     | Pulse width              |
++----------------+----------+--------------------------+
+| tp             | real     | Pulse period             |
++----------------+----------+--------------------------+
+
+example
+~~~~~~~
+
+This generates a pulse starting at t=10 nsec and its initial value is 1'b1.  ::
+
+  pulse #(.b0(1'b1), .td(10e-9), .tw(1e-9), .tp(5e-9)) xdriver (.out(o), .outb(ob));
+
+
+Analog Stimulus
+===============
+
+.. _mod_idc_n:
+
+Module: idc_n_(real/pwl)
+------------------------
+
+This is a DC current source outputs current from *pn* node to *nn* node. It is separated from *idc_p* current source since SystemVerilog only allows unidirectional signal flow. This means that \- node (*nn* node) outputs a current. 
+
+port
+~~~~
+
++-----------+----------+--------+-----------------------------+
+| Port name | Datatype | I/O    | Description                 |
++===========+==========+========+=============================+
+| pn        | real/pwl | input  | \+ node of a current source |
++-----------+----------+--------+-----------------------------+
+| nn        | real/pwl | output | \- node of a current source |
++-----------+----------+--------+-----------------------------+
+
+parameter
+~~~~~~~~~
+
++----------------+----------+------------------+
+| Parameter name | Datatype | Description      |
++================+==========+==================+
+| dc             | real     | DC current value |
++----------------+----------+------------------+
+
+example
+~~~~~~~
+
+This generates a 10 uA DC current source from *VDD* to *iout*. ::
+  
+  idc_n_pwl #(.dc(10e-6)) xdriver (.pn(VDD), .nn(iout));
+
+
+.. _mod_idc_p:
+
+Module: idc_p_(real/pwl)
+------------------------
+
+This is a DC current source outputs current from *pn* node to *nn* node. It is separated from *idc_n* current source since SystemVerilog only allows unidirectional signal flow. This means that \+ node (*pn* node) outputs a current.
+
+port
+~~~~
+
++-----------+----------+--------+-----------------------------+
+| Port name | Datatype | I/O    | Description                 |
++===========+==========+========+=============================+
+| pn        | real/pwl | output | \+ node of a current source |
++-----------+----------+--------+-----------------------------+
+| nn        | real/pwl | input  | \- node of a current source |
++-----------+----------+--------+-----------------------------+
+
+parameter
+~~~~~~~~~
+
++----------------+----------+------------------+
+| Parameter name | Datatype | Description      |
++================+==========+==================+
+| dc             | real     | DC current value |
++----------------+----------+------------------+
+
+example
+~~~~~~~
+
+This generates a 10 uA DC current source from ``iout`` to ``VSS``. ::
+  
+  idc_p_pwl #(.dc(10e-6)) xdriver (.pn(iout), .nn(VSS));
+
+.. _mod_ipulse_n:
+
+Module: ipulse_n_(real/pwl)
+---------------------------
+
+A pulse driver version of *idc_n_(real/pwl)*.
+
+port
+~~~~
+
++-----------+----------+--------+-----------------------------+
+| Port name | Datatype | I/O    | Description                 |
++===========+==========+========+=============================+
+| pn        | real/pwl | input  | \+ node of a current source |
++-----------+----------+--------+-----------------------------+
+| nn        | real/pwl | output | \- node of a current source |
++-----------+----------+--------+-----------------------------+
+
+parameter
+~~~~~~~~~
+
+In this parameter set, *tr* and *tf* are only effective for ``ipulse_n_pwl``.
+
++----------------+----------+--------------------------+
+| Parameter name | Datatype | Description              |
++================+==========+==========================+
+| i0             | real     | Initial value            |
++----------------+----------+--------------------------+
+| i1             | real     | The other value          |
++----------------+----------+--------------------------+
+| td             | real     | Initial delay of a pulse |
++----------------+----------+--------------------------+
+| tr             | real     | Rise time                |
++----------------+----------+--------------------------+
+| tf             | real     | Fall time                |
++----------------+----------+--------------------------+
+| tw             | real     | Pulse width              |
++----------------+----------+--------------------------+
+| tp             | real     | Pulse period             |
++----------------+----------+--------------------------+
+
+example
+~~~~~~~
+
+::
+
+  ipulse_n_pwl #(.i0(5e-6), .i1(15e-6), .td(6e-9), .tr(100e-12), .tf(50e-12), .tw(2e-9), .tp(10e-9)) xdriver (.pn(VDD), .nn(iout));
+
+.. _mod_ipulse_p:
+
+Module: ipulse_p_(real/pwl)
+---------------------------
+
+A pulse driver version of *idc_p_(real/pwl)*.
+
+port
+~~~~
+
++-----------+----------+--------+-----------------------------+
+| Port name | Datatype | I/O    | Description                 |
++===========+==========+========+=============================+
+| pn        | real/pwl | output | \+ node of a current source |
++-----------+----------+--------+-----------------------------+
+| nn        | real/pwl | input  | \- node of a current source |
++-----------+----------+--------+-----------------------------+
+
+parameter
+~~~~~~~~~
+
+In this parameter set, *tr* and *tf* are only effective for ``ipulse_p_pwl``.
+
++----------------+----------+--------------------------+
+| Parameter name | Datatype | Description              |
++================+==========+==========================+
+| i0             | real     | Initial value            |
++----------------+----------+--------------------------+
+| i1             | real     | The other value          |
++----------------+----------+--------------------------+
+| td             | real     | Initial delay of a pulse |
++----------------+----------+--------------------------+
+| tr             | real     | Rise time                |
++----------------+----------+--------------------------+
+| tf             | real     | Fall time                |
++----------------+----------+--------------------------+
+| tw             | real     | Pulse width              |
++----------------+----------+--------------------------+
+| tp             | real     | Pulse period             |
++----------------+----------+--------------------------+
+
+example
+~~~~~~~
+
+::
+
+  ipulse_p_pwl #(.i0(5e-6), .i1(15e-6), .td(6e-9), .tr(100e-12), .tf(50e-12), .tw(2e-9), .tp(10e-9)) xdriver (.pn(VDD), .nn(iout));
+
+Digital Measurement
+===================
+
+``Under construction``
+
+Analog Measurement
+==================
+
+``Under construction``

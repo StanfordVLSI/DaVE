@@ -1,0 +1,165 @@
+/****************************************************************
+
+Copyright (c) 2018- Stanford University. All rights reserved.
+
+The information and source code contained herein is the 
+property of Stanford University, and may not be disclosed or
+reproduced in whole or in part without explicit written 
+authorization from Stanford University. Contact bclim@stanford.edu for details.
+
+* Filename   : pwl_filter_pfe.v
+* Author     : Byongchan Lim (bclim@stanford.edu)
+* Description: 
+  - A linear filter primitive cell. Transfer function is 
+    TF(s) = A/(s+B) where A and B are "REAL" numbers.
+  - If A is complex, use "pwl_filter_pfe_cplx.v".
+
+* Note       :
+  - If "in" should be a "real" signal, a trick is to change it to a pwl
+    signal with zero slope.
+
+* Revision   :
+  - 00/00/00 : First release
+
+****************************************************************/
+
+
+module pwl_filter_pfe #(
+  parameter real etol = 0.001,      // error tolerance of PWL approximation
+  parameter logic en_filter = 1'b0  // enable output event filtering
+) (
+  input complex A,  // coef A
+  input complex B,  // coef B
+  `input_pwl in,    // filter signal input 
+  `output_pwl out   // filter output
+);
+
+timeunit `DAVE_TIMEUNIT ;
+timeprecision `DAVE_TIMEUNIT ;
+
+pulldown(reset);
+
+`protect
+//pragma protect 
+//pragma protect begin
+`get_timeunit // get timeunit in sec and assign it to the variable 'TU'
+PWLMethod pm=new; // Method for PWL signal processing
+CMath cm=new; // Method for complex numbers
+
+// wires
+event  wakeup;  // event signal
+real t0;  // time offset
+real t_cur;   // current time
+real dTr;  // time interval of PWL waveform
+time dT=1;
+time dTm=0;
+time t_prev;
+time t0m;
+
+real out_cur; // current output signal value
+real out_nxt;  // out at (t_cur+dT) for pwl output data
+real y0;  // output signal value offset (out_cur at t0)
+real out_slope; // out slope
+real err;
+event dummy_event;
+
+complex inb_c, ina_c, y0_c;
+
+initial -> dummy_event;
+
+always @(`pwl_event(in) or A.r or A.i or B.r or B.i or dummy_event) begin
+  inb_c = cm.to_c(in.b);
+  ina_c = cm.to_c(in.a);
+  t_cur = `get_time;
+  if ($time == 0) out = '{fn_compute_out0(),0.0,0.0}; // dc initialization
+  out_cur = pm.eval(out, t_cur);
+  y0 = out_cur;
+  y0_c = cm.to_c(y0);
+  t0 = t_cur;
+  t_prev = $time;
+  dT = 0;
+  if ($time != 0) ->> wakeup;
+end
+
+always @(wakeup) begin
+  t0m = $time;
+  dTm = t0m - t_prev;
+  if (dT==dTm) begin
+    t_prev = $time;
+    t_cur = `get_time;
+    out_cur = pm.eval(out, t_cur);
+    dTr = compute_dt(etol, t_cur-t0); //dTr = TU;
+    dT = max(1, time'(dTr/TU));
+    dTr = dT*TU;
+    out_nxt = compute_fn(t_cur-t0+dTr);
+    out_slope = (out_nxt-out_cur)/dTr;
+    err = abs(out.b*dTr - out_slope*dTr);
+    if (en_filter == 1'b1) 
+      if (err >= etol) out = pm.write(out_cur, out_slope, t_cur);
+      else out = out;
+    else
+      out = pm.write(out_cur, out_slope, t_cur);
+    ->> #(dT) wakeup;
+  end
+end
+
+/*******************************************
+  Response function, its 1st/2nd derivatives
+*******************************************/
+
+function real fn_compute_out0;
+begin
+  return cm.re(cm.sub(cm.mult(cm.div(A,B),ina_c),cm.div(cm.mult(A,inb_c),cm.mult(B,B)))); // Re{A*(B*ina - inb)/B**2}
+end
+endfunction
+
+function real compute_fn;
+input real t; 
+complex term1, term2, term3;
+complex _e1, _e2;
+complex term;
+complex t_c;
+begin
+  t_c = cm.to_c(t);
+  _e1 = cm.cexp(cm.scale(cm.mult(B,t_c),-1));
+  _e2 = cm.div(cm.sub(cm.add(cm.mult(cm.mult(B,B),y0_c),cm.mult(A,inb_c)),cm.mult(cm.mult(A,B),ina_c)),cm.mult(B,B)); // (-A*B*ina + A*inb + B**2*y0)/B**2
+  term1 = cm.mult(cm.div(A,B),cm.to_c(in.b*t)); // A*inb*t/B
+  term2 = cm.sub(cm.mult(cm.div(A,B),ina_c),cm.div(cm.mult(A,inb_c),cm.mult(B,B))); // A*(B*ina - inb)/B**2
+  term3 = cm.mult(_e1,_e2); // (-A*B*ina + A*inb + B**2*y0)*exp(-B*t)/B**2
+  term = cm.add(cm.add(term1,term2),term3);
+  
+  return cm.re(term);
+end
+endfunction
+
+function real compute_f2max;
+input real t; 
+complex term1, term2, term3, term;
+complex t_c, _e;
+begin
+  t_c = cm.to_c(t);
+  _e = cm.cexp(cm.scale(cm.mult(B,t_c),-1));
+  term = cm.mult(cm.sub(cm.add(cm.mult(cm.mult(B,B),y0_c),cm.mult(A,inb_c)),cm.mult(cm.mult(A,B),ina_c)),_e); // (-A*B*ina + A*inb + B**2*y0)*exp(-B*t)
+  return abs(cm.re(term)); 
+end
+endfunction
+
+/*************************************
+  Caluating Tintv
+*************************************/
+
+function real compute_dt;
+input real etol, t; 
+real abs_f2max;
+real calcT;
+begin
+  abs_f2max = compute_f2max(t);
+  calcT = sqrt(8.0*etol/abs_f2max);
+  return min(`DT_MAX,max(TU,min(1.0,calcT)));
+end
+endfunction
+
+//pragma protect end
+`endprotect
+
+endmodule

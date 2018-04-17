@@ -1,0 +1,407 @@
+$$$
+
+.SUBCKT tgate vdd_in in out en enb WP=8 LP=2 WN=8 LN=2
+Mn in en  out gnd    nmos W='WN' L='LN' 
+Mp in enb out vdd_in pmos W='WP' L='LP' 
+.ends tgate
+
+.SUBCKT tinv vdd_in in out en enb WP=16 LP=2 WN=8 LN=2
+Mnin out  in  dmyn   gnd    nmos W='WN' L='LN' 
+Mnen dmyn en  gnd    gnd    nmos W='WN' L='LN' 
+Mpin out  in  dmyp   vdd_in pmos W='WP' L='LP' 
+Mpen dmyp enb vdd_in vdd_in pmos W='WP' L='LP' 
+.ends tinv
+
+.SUBCKT dff vdd_in in out clk clkb rst 
+** generate rstb
+xrstb vdd_in rst rstb inv
+
+** Main path
+xinv1   vdd_in in a    inv
+xtgate1 vdd_in a  b    clkb clk  tgate
+*xinv2   vdd_in b  c   inv
+xnor2   vdd_in b  rst  c   nor2
+xtgate2 vdd_in c  d    clk  clkb tgate
+*xinv3   vdd_in d  e   inv
+xnand3  vdd_in d  rstb e   nand2
+xinv4   vdd_in e  out  inv
+
+** feedback
+xtinv1  vdd_in c  b   clk  clkb tinv
+xtinv2  vdd_in e  d   clkb clk  tinv
+
+.ends dff
+
+
+.SUBCKT inv vdd_in in out WP=16 LP=2 WN=8 LN=2
+Mn out in gnd    gnd    nmos W='WN' L='LN'  
+Mp out in vdd_in vdd_in pmos W='WP' L='LP' 
+.ENDS   $ inv
+
+.SUBCKT nand2 vdd_in in1 in2 out WP=16 LP=2 WN=16 LN=2
+Mp1 out in1 vdd_in vdd_in pmos W='WP' L='LP' 
+Mp2 out in2 vdd_in vdd_in pmos W='WP' L='LP' 
+Mn1 out in1 dmy    gnd    nmos W='WN' L='LN' 
+Mn2 dmy in2 gnd    gnd    nmos W='WN' L='LN' 
+.ends nand2
+
+.SUBCKT nor2 vdd_in in1 in2 out WP=32 LP=2 WN=8 LN=2
+Mp1 out  in1 dmyp   vdd_in pmos W='WP' L='LP' 
+Mp2 dmyp in2 vdd_in vdd_in pmos W='WP' L='LP' 
+Mn1 out  in1 gnd    gnd    nmos W='WN' L='LN' 
+Mn2 out  in2 gnd    gnd    nmos W='WN' L='LN' 
+.ends nor2
+
+
+.SUBCKT pfd vdd_in ref refb fdbk fdbkb up dn 
+
+xdffref  vdd_in vdd_in up ref  refb  rst dff
+xdfffdbk vdd_in vdd_in dn fdbk fdbkb rst dff
+xrst     vdd_in up dn rstbi nand2
+xrst2    vdd_in rstbi rst   inv
+
+.ends pfd
+
+
+.subckt chgpmp avdd rst up dn vctrl
++wcpref=20 lnb=4 lp=2 ln=2
++wcpbias=20 wcpin=16 wcpld=32
++icpref=110e-6
+
+** generate rstb
+xrstb avdd rst rstb inv
+
+** generate upi/upbi
+xinvu1 avdd up   upb  inv
+xinvu2 avdd upb  upii inv
+xnandu avdd upii rstb upib nand2
+xinvu3 avdd upib upi  inv
+
+** generate dni/dnbi
+xinvd1 avdd dn   dnb  inv
+xinvd2 avdd dnb  dnii inv
+xnandd avdd dnii rstb dnib nand2
+xinvd3 avdd dnib dni  inv
+
+** bias
+ibias avdd vcn icpref
+mnbias vcn vcn gnd gnd nmos w=wcpref l=lnb
+
+** up diff pair
+muptail tailup vcn  gnd    gnd nmos w=wcpbias l=lnb
+mupinp  vcp    upi  tailup gnd nmos w=wcpin   l=ln
+mupinn  n1     upib tailup gnd nmos w=wcpin   l=ln
+mupldp  vcp    vcp  avdd   avdd pmos w=wcpld   l=lp 
+mupldn  n1     n1   avdd    avdd pmos w=wcpld   l=lp
+
+** dn diff pair
+mdntail taildn vcn  gnd    gnd nmos w=wcpbias l=lnb
+mdninp  vctrl  dni  taildn gnd nmos w=wcpin   l=ln
+mdninn  n2     dnib taildn gnd nmos w=wcpin   l=ln
+mdnldp  vctrl  vcp  avdd   avdd pmos w=wcpld   l=lp 
+mdnldn  n2     n2   avdd   avdd pmos w=wcpld   l=lp
+
+.ends chgpmp
+
+
+.SUBCKT filter1 vctrl 
++rfilt=250 cfilt=120e-12
+
+vcmeas vctrl vci 0.0
+rfilt  vci ri    rfilt
+cfilt  ri ci    cfilt
+vb     ci gnd   0.0
+
+** third pole
+cp3 vctrl gnd 1e-12
+
+.ENDS filter1
+
+.SUBCKT regulator_open AVdd Vctrl Vff Vfdbkreg Vfdbkrpl Vreg Vrpl 
+
+** Fixed Size Bias Circuit
+M0 mid mid AVdd AVdd pmos W='36' L='2'  
++ AS='(36)*5' AD='(36)*3'
++ PS='2.00*(36)+2*5' PD='1.00*(36)+2*3'
++ NRD='3.00/(36)' NRS='3.00/(36)'
+M1 vbn mid AVdd AVdd pmos W='16' L='2'  
++ AS='(16)*5' AD='(16)*3'
++ PS='2.00*(16)+2*5' PD='1.00*(16)+2*3'
++ NRD='3.00/(16)' NRS='3.00/(16)'
+M8 mid Vctrl gnd gnd nmos W='4' L='4'  
++ AS='(4)*5' AD='(4)*3'
++ PS='2.00*(4)+2*5' PD='1.00*(4)+2*3'
++ NRD='3.00/(4)' NRS='3.00/(4)'
+M9 vbn vbn gnd gnd nmos W='10' L='4'  
++ AS='(10)*5' AD='(10)*3'
++ PS='2.00*(10)+2*5' PD='1.00*(10)+2*3'
+
+** Fixed size Vdd Cap
+Mvddcap gnd AVdd gnd gnd nmos W='700' L='4'  
++ AS='(700)*5' AD='(700)*3'
++ PS='2.00*(700)+2*5' PD='1.00*(700)+2*3'
++ NRD='3.00/(700)' NRS='3.00/(700)'
+
+** Amp Load
+Mld1 vbm vbm AVdd AVdd pmos W='Wld' L='2' M=2 
++ AS='(Wld)*5' AD='(Wld)*3'
++ PS='2.00*(Wld)+2*5' PD='1.00*(Wld)+2*3'
++ NRD='3.00/(Wld)' NRS='3.00/(Wld)'
+Mld2 vbp vbm AVdd AVdd pmos W='Wld' L='2' M=2 
++ AS='(Wld)*5' AD='(Wld)*3'
++ PS='2.00*(Wld)+2*5' PD='1.00*(Wld)+2*3'
++ NRD='3.00/(Wld)' NRS='3.00/(Wld)'
+
+** Main diff amp
+Min1 vbm Vfdbkreg tail1 gnd nmos W='(1-k)*Win' L='2'  
++ AS='(1-k)*Win*5' AD='(1-k)*Win*3'
++ PS='2.00*(1-k)*Win+2*5' PD='1.00*(1-k)*Win+2*3'
++ NRD='3.00/((1-k)*Win)' NRS='3.00/((1-k)*Win)'
+Min2 vbp Vff tail1 gnd nmos W='(1-k)*Win' L='2'  
++ AS='((1-k)*Win)*5' AD='((1-k)*Win)*3'
++ PS='2.00*((1-k)*Win)+2*5' PD='1.00*((1-k)*Win)+2*3'
++ NRD='3.00/((1-k)*Win)' NRS='3.00/((1-k)*Win)'
+Minbias tail1 vbn gnd gnd nmos W='(1-k)*Wbias' L='4'  
++ AS='((1-k)*Wbias)*5' AD='((1-k)*Wbias)*3'
++ PS='2.00*((1-k)*Wbias)+2*5' PD='1.00*((1-k)*Wbias)+2*3'
++ NRD='3.00/((1-k)*Wbias)' NRS='3.00/((1-k)*Wbias)'
+
+** Feedback amp
+Mfdbk1 vbm Vfdbkrpl tail2 gnd nmos W='k*Win' L='2'  
++ AS='(k*Win)*5' AD='(k*Win)*3'
++ PS='2.00*(k*Win)+2*5' PD='1.00*(k*Win)+2*3'
++ NRD='3.00/(k*Win)' NRS='3.00/(k*Win)'
+Mfdbk2 vbp Vff tail2 gnd nmos W='k*Win' L='2'  
++ AS='(k*Win)*5' AD='(k*Win)*3'
++ PS='2.00*(k*Win)+2*5' PD='1.00*(k*Win)+2*3'
++ NRD='3.00/(k*Win)' NRS='3.00/(k*Win)'
+Mfdbkbias tail2 vbn gnd gnd nmos W='k*Wbias' L='4'  
++ AS='(k*Wbias)*5' AD='(k*Wbias)*3'
++ PS='2.00*(k*Wbias)+2*5' PD='1.00*(k*Wbias)+2*3'
++ NRD='3.00/(k*Wbias)' NRS='3.00/(k*Wbias)'
+
+** output and replica amplifiers
+Mreg Vreg vbp AVdd AVdd pmos W='Wreg' L='2'  
++ AS='(Wreg)*5' AD='(Wreg)*3'
++ PS='2.00*(Wreg)+2*5' PD='1.00*(Wreg)+2*3'
++ NRD='3.00/(Wreg)' NRS='3.00/(Wreg)'
+Mrpl Vrpl vbp AVdd AVdd pmos W='Wrpl' L='2'  
++ AS='(Wrpl)*5' AD='(Wrpl)*3'
++ PS='2.00*(Wrpl)+2*5' PD='1.00*(Wrpl)+2*3'
++ NRD='3.00/(Wrpl)' NRS='3.00/(Wrpl)'
+
+Mcap gnd Vreg gnd gnd nmos W='Wcap' L='4' M=8
++ AS='(Wcap)*5' AD='(Wcap)*3'
++ PS='2.00*(Wcap)+2*5' PD='1.00*(Wcap)+2*3'
++ NRD='3.00/(Wcap)' NRS='3.00/(Wcap)'
+
+.ENDS	$ regulator_open
+
+*********************************************
+** Main Regulator Block
+*********************************************
+
+.SUBCKT regulator AVdd Vctrl Vff Vreg Vrpl
++ Wld=19 Win=534 Wbias=12 Wrpl=12 
++ Wreg=10 Wcap=551 k=0.25
+
+Xregopen AVdd Vctrl Vff Vreg Vrpl Vreg Vrpl regulator_open
+.ENDS
+
+
+
+
+
+
+.SUBCKT ringosc Vreg ck ckb WVCO=16 PNR=3
+Xbp0 Vreg p0 p1  vco_inv WP='WVCO*PNR' LP=2.5 WN=WVCO LN=2.5
+Xbp1 Vreg p1 p2  vco_inv WP='WVCO*PNR' LP=2.5 WN=WVCO LN=2.5
+Xbp2 Vreg p2 p3  vco_inv WP='WVCO*PNR' LP=2.5 WN=WVCO LN=2.5
+Xbp3 Vreg p3 p4  vco_inv WP='WVCO*PNR' LP=2.5 WN=WVCO LN=2.5
+Xbp4 Vreg p4 p0  vco_inv WP='WVCO*PNR' LP=2.5 WN=WVCO LN=2.5 M=2
+
+Xbm0 Vreg m0 m1  vco_inv WP='WVCO*PNR' LP=2.5 WN=WVCO LN=2.5
+Xbm1 Vreg m1 m2  vco_inv WP='WVCO*PNR' LP=2.5 WN=WVCO LN=2.5
+Xbm2 Vreg m2 m3  vco_inv WP='WVCO*PNR' LP=2.5 WN=WVCO LN=2.5
+Xbm3 Vreg m3 m4  vco_inv WP='WVCO*PNR' LP=2.5 WN=WVCO LN=2.5
+Xbm4 Vreg m4 m0  vco_inv WP='WVCO*PNR' LP=2.5 WN=WVCO LN=2.5 M=2
+
+Xbop Vreg p0 ck  vco_inv WP='WVCO*PNR' LP=2.5 WN=WVCO LN=2.5
+Xbom Vreg m0 ckb vco_inv WP='WVCO*PNR' LP=2.5 WN=WVCO LN=2.5
+
+X1 Vreg m2 vco_dmyload WP='WVCO*PNR' WN=WVCO LN=2.5 LP=2.5
+X2 Vreg m3 vco_dmyload WP='WVCO*PNR' WN=WVCO LN=2.5 LP=2.5
+X3 Vreg p2 vco_dmyload WP='WVCO*PNR' WN=WVCO LN=2.5 LP=2.5
+X4 Vreg p3 vco_dmyload WP='WVCO*PNR' WN=WVCO LN=2.5 LP=2.5
+X5 Vreg p1 vco_dmyload WP='WVCO*PNR' WN=WVCO LN=2.5 LP=2.5
+X6 Vreg m1 vco_dmyload WP='WVCO*PNR' WN=WVCO LN=2.5 LP=2.5
+Xbc0 Vreg m0 p0 vco_inv WP='WVCO*PNR' LP=2.5 WN=WVCO LN=2.5 
+Xbc1 Vreg p0 m0 vco_inv WP='WVCO*PNR' LP=2.5 WN=WVCO LN=2.5 
+*.ic v(p0)=0 v(m0)='vcval'
+.ENDS	$ ringosc
+
+.SUBCKT vco_dmyload Vdd_in in WP=4 WN=2 LP=2 LN=2
+** frame 
+M_0 gnd in gnd gnd nmos W='WN' L='LN' 
+M_1 Vdd_in in Vdd_in Vdd_in pmos W='WP' L='LP'
+.ENDS	$ vco_dmyload
+
+
+.SUBCKT replica_load Vrpl WREP=8 PNR=3
+M_0 net_1 Vrpl gnd gnd nmos W='WREP' L='2'  
+M_1 net_2 net_2 gnd gnd nmos W='WREP' L='2'  
+M_2 net_1 net_1 Vrpl Vrpl pmos W='WREP*PNR' L='2'  
+M_3 net_2 gnd Vrpl Vrpl pmos W='WREP*PNR' L='2'  
+.ENDS	$ replica_load
+
+.SUBCKT vcobuf AVdd hck hckb lck lckb WBUF=64 PNRBUF=3 WDS=32 PNRDS=3
+** frame 
+Xlo2hi AVdd lck lckb m mb vco_low2hi WBUF=WBUF PNR=PNRBUF
+Xds0 AVdd m mb hck vco_dtos WDS=WDS PNR=PNRDS
+Xds1 AVdd mb m hckb vco_dtos WDS=WDS PNR=PNRDS
+.ENDS	$ vcobuf
+
+.SUBCKT vco_dtos AVdd in inb out WDS=32 PNR=3
+** frame 
+M_0 mid midb gnd gnd nmos W='WDS' L='2'  
++ AS='(WDS)*5' AD='(WDS)*3'
++ PS='2.00*(WDS)+2*5' PD='1.00*(WDS)+2*3'
++ NRD='3.00/(WDS)' NRS='3.00/(WDS)'
+M_1 midb midb gnd gnd nmos W='WDS' L='2'  
++ AS='(WDS)*5' AD='(WDS)*3'
++ PS='2.00*(WDS)+2*5' PD='1.00*(WDS)+2*3'
++ NRD='3.00/(WDS)' NRS='3.00/(WDS)'
+Xvco_inv80 AVdd net_1 out vco_inv M=2 WP='WDS*PNR' LP=2 WN=WDS LN=2
+M_2 mid in AVdd AVdd pmos W='WDS*PNR' L='2'  
++ AS='(WDS*PNR)*5' AD='(WDS*PNR)*3'
++ PS='2.00*(WDS*PNR)+2*5' PD='1.00*(WDS*PNR)+2*3'
++ NRD='3.00/(WDS*PNR)' NRS='3.00/(WDS*PNR)'
+M_3 midb inb AVdd AVdd pmos W='WDS*PNR' L='2'  
++ AS='(WDS*PNR)*5' AD='(WDS*PNR)*3'
++ PS='2.00*(WDS*PNR)+2*5' PD='1.00*(WDS*PNR)+2*3'
++ NRD='3.00/(WDS*PNR)' NRS='3.00/(WDS*PNR)'
+Xvco_inv118 AVdd mid net_1 vco_inv WP='WDS*PNR' LP=2 WN=WDS LN=2
+.ENDS	$ vco_dtos
+
+.SUBCKT vco_low2hi AVdd in inb out outb WBUF=16 PNR=3
+** frame 
+M_0 outb in gnd gnd nmos W='WBUF' L='2'  
++ AS='(WBUF)*5' AD='(WBUF)*3'
++ PS='2.00*(WBUF)+2*5' PD='1.00*(WBUF)+2*3'
++ NRD='3.00/(WBUF)' NRS='3.00/(WBUF)'
+M_1 out inb gnd gnd nmos W='WBUF' L='2'  
++ AS='(WBUF)*5' AD='(WBUF)*3'
++ PS='2.00*(WBUF)+2*5' PD='1.00*(WBUF)+2*3'
++ NRD='3.00/(WBUF)' NRS='3.00/(WBUF)'
+M_2 outb outb AVdd AVdd pmos W='WBUF*PNR/2' L='2'  
++ AS='(WBUF*PNR/2)*5' AD='(WBUF*PNR/2)*3'
++ PS='2.00*(WBUF*PNR/2)+2*5' PD='1.00*(WBUF*PNR/2)+2*3'
++ NRD='3.00/(WBUF*PNR/2)' NRS='3.00/(WBUF*PNR/2)'
+M_3 outb out AVdd AVdd pmos W='WBUF*PNR/2' L='2'  
++ AS='(WBUF*PNR/2)*5' AD='(WBUF*PNR/2)*3'
++ PS='2.00*(WBUF*PNR/2)+2*5' PD='1.00*(WBUF*PNR/2)+2*3'
++ NRD='3.00/(WBUF*PNR/2)' NRS='3.00/(WBUF*PNR/2)'
+M_4 out outb AVdd AVdd pmos W='WBUF*PNR/2' L='2'  
++ AS='(WBUF*PNR/2)*5' AD='(WBUF*PNR/2)*3'
++ PS='2.00*(WBUF*PNR/2)+2*5' PD='1.00*(WBUF*PNR/2)+2*3'
++ NRD='3.00/(WBUF*PNR/2)' NRS='3.00/(WBUF*PNR/2)'
+M_5 out out AVdd AVdd pmos W='WBUF*PNR/2' L='2'  
++ AS='(WBUF*PNR/2)*5' AD='(WBUF*PNR/2)*3'
++ PS='2.00*(WBUF*PNR/2)+2*5' PD='1.00*(WBUF*PNR/2)+2*3'
++ NRD='3.00/(WBUF*PNR/2)' NRS='3.00/(WBUF*PNR/2)'
+.ENDS	$ vco_low2hi
+
+.SUBCKT vco_inv Vdd_in in out WP=16 LP=2 WN=8 LN=2
+M_0 out in gnd gnd nmos W='WN' L='LN' 
+M_1 out in Vdd_in Vdd_in pmos W='WP' L='LP'
+.ENDS   $ vco_inv
+
+.SUBCKT div2 vdd_in clkin clkinb clkout clkoutb rst
+
+xdiv vdd_in clkoutb clkout clkin clkinb rst dff
+xinv vdd_in clkout clkoutb inv
+
+.ends div2
+
+.SUBCKT div4 vdd_in clkin clkinb clkout clkoutb rst
+
+xdiv1 vdd_in clkin clkinb div2 div2b rst div2
+xdiv2 vdd_in div2  div2b  clkout clkoutb rst div2
+
+.ends div4
+
+
+.SUBCKT pll2nd vdd_in refclk refclkb outclk outclkb divclk divclkb vctrl up dn
+.global gnd
+
+** size parameters **
+* regulator
+.param wldval   = 23.5
+.param winval   = 288.6
+.param wbiasval = 44.1
+.param wrplval  = 29.3
+.param wregval  = 95.1
+.param wcapval  = 533.0
+.param kval     = 0.31
+
+* vco
+.param wnvcoval   = 5.2
+.param pnrvcoval  = 5
+
+* chgpmp
+.param wcpbiasval = 15.1
+.param wcpinval   = 10.0
+.param wcpldval   = 21.8
+
+* filter
+*.param rfiltval = 438.4
+*.param cfiltval = 196.8e-12
+.param rfiltval = 679  
+.param cfiltval = 31.274e-12
+
+* buffer
+.param wbufpval   = 10.0
+.param wbufnval   = 58.7
+.param wdspval    = 10.0
+.param wdsnval    = 10.0
+.param pnrbufval  = 0.17
+.param pnrdsval   = 1.0
+
+
+xpfd    vdd_in refclk refclkb divclk divclkb up dn pfd
+
+** Charge pump
+xcp     vdd_in gnd up dn vctrl chgpmp
++wcpbias=wcpbiasval wcpin=wcpinval wcpld=wcpldval
+
+** Filter
+xfilt   vctrl filter1
++ rfilt=rfiltval cfilt=cfiltval
+
+
+** Regulator
+xreg    vdd_in vctrl vctrl vreg vrpl regulator
++ Wld=wldval Win=winval Wbias=wbiasval Wrpl=wrplval
++ Wreg=wregval Wcap=wcapval k=kval
+
+** Replica load
+xrpl    vrpl replica_load
+
+** Oscillator
+xosc    vreg    lclk  lclkb  ringosc
++ wvco=wnvcoval pnr=pnrvcoval
+
+** Buffer
+xbuf    vdd_in  fbclk fbclkb lclk lclkb vcobuf
++ wbuf=wbufnval pnrbuf=pnrbufval
++ wds=wdsnval pnrds = pnrdsval
+
+** divider
+xdiv2 vdd_in fbclk fbclkb divclk divclkb 0 div2
+
+xfbinv   vdd_in fbclk   fbclki   inv
+xfbinv2  vdd_in fbclki  outclk   inv
+xfbbinv  vdd_in fbclkb  fbclkbi  inv
+xfbbinv2 vdd_in fbclkbi outclkb  inv
+*.include "/home/bclim/proj/equivalence_check/repos/analogmodelchecker/mcs_example/metha_pll/plltop/netlist/ic.txt"
+.ENDS pll2nd

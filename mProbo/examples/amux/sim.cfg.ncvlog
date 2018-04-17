@@ -1,0 +1,56 @@
+#################################################################
+#
+# Copyright (c) 2018- Stanford University. All rights reserved.
+# 
+# The information and source code contained herein is the 
+# property of Stanford University, and may not be disclosed or
+# reproduced in whole or in part without explicit written 
+# authorization from Stanford University. Contact bclim@stanford.edu for details.
+# 
+# * Author     : Byong Chan Lim (bclim@stanford.edu)
+# * Description: mProbo simulator configuration file for "amux" 
+#   example
+#     - sim.cfg for ncverilog simulator
+# 
+# * Note       :
+# 
+# * Revision   :
+#   - 7/26/2016: First release
+# 
+#################################################################
+
+
+[DEFAULT] 
+
+# In this example, variables in [DEFAULT] (until starting golden section) 
+# are just for string interpolation;  None of them is a reserved word for 
+# a simulator configuration
+
+dut = amux  # name of device-under-test
+prj_dir = ${mPROBO_DEMO_DIR}/%(dut)s
+ckt_dir = %(prj_dir)s
+vlog_dir = %(prj_dir)s/vlog
+lib_dir = ${DAVE_SAMPLES}/mLingua_ncsim
+opt_y_va = -y %(lib_dir)s/misc -y %(lib_dir)s/stim -y %(lib_dir)s/meas -y %(lib_dir)s/device 
+opt_y_sv = %(opt_y_va)s -y %(lib_dir)s/prim
+inc_dir = ${DAVE_INST_DIR}/samples/mLingua+${DAVE_INST_DIR}/samples/mProbo
+
+
+[golden] # Set-up for golden model
+  model = ams  # ams or verilog
+  simulator = ncsim # ncsim or vcs
+  hdl_include_files = mProbo_macro.vh, mLingua_pwl.vh # Verilog header files to be included in a test bench
+  ams_control_file = %(prj_dir)s/../circuit.scs # analog control file for running AMS simulation in NC-simulator
+  simulator_option = +nc64bit +NCCDSLIB+%(lib_dir)s/connect/cds.lib +WORK+worklib +libext+.v+.va+.vams +ncdiscipline+logic +ACCESS+rwc +ncnolog %(opt_y_va)s +incdir+%(inc_dir)s -loadpli %(lib_dir)s/pli/libpli.so:dave_boot # simulator option
+  default_ams_connrules = connectLib.conn_1p8v # ams connect rule
+  spice_lib = ${mPROBO_DEMO_DIR}/spice_lib/ptm065/models.lib  # SPICE model for circuit simulation
+  sweep_file = False  # delete simulation files if True
+  [[circuit]] # import circuit netlist, only if "model"=="ams" and "simulator"=="ncsim"
+    amux = %(ckt_dir)s/amux.sp # subcircuit name and its spice netlist filename
+
+[revised] # Set-up for revised model
+  model = verilog
+  simulator = ncsim
+  hdl_files  = %(vlog_dir)s/%(dut)s.v  # verilog files to include
+  hdl_include_files = mProbo_macro.vh, mLingua_pwl.vh
+  simulator_option =  +libext+.v+.sv+.vp %(opt_y_sv)s +incdir+%(inc_dir)s -sv +define+NCVLOG -loadpli1 ${mLINGUA_DIR}/samples_ncsim/pli/libpli.so:dave_boot -sem2009 -seed random +nc64bit

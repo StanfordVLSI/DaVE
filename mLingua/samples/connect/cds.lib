@@ -1,0 +1,2 @@
+#define worklib worklib
+softinclude ${DAVE_SAMPLES}/mLingua/connect/connect_lib/cds.lib

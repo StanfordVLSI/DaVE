@@ -1,0 +1,46 @@
+################################################################
+# 
+# Copyright (c) #YEAR# #LICENSOR#. All rights reserved.
+# 
+# The information and source code contained herein is the 
+# property of #LICENSOR#, and may not be disclosed or
+# reproduced in whole or in part without explicit written 
+# authorization from #LICENSOR#.
+# 
+# * Filename   : delay.ifc.yaml
+# * Author     : Byongchan Lim (info@joey-eda-consulting.com)
+# * Description: SV template for a delay cell
+# 
+# * Note       :
+#   - Datatype can be one of the followings [pwl, real, logic]
+#   - Array is not allowed for in/out pins
+# 
+# * Todo       :
+#   - 
+# 
+# * Revision   :
+#   - 00/00/00 : 
+# 
+################################################################
+
+module_name: delay
+description: Interface for a delay cell
+pin:
+  in:
+    name: in
+    description: input signal
+    direction: input
+    datatype: pwl 
+    vectorsize: 0
+  out:
+    name: out
+    description: output signal
+    direction: output
+    datatype: pwl 
+    vectorsize: 0 
+    
+metric: # optional behaviors to be incorporated in a model
+      
+modelparam: # model parameters
+
+testparam: # test parameters

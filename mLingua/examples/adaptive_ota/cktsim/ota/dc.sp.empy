@@ -1,0 +1,40 @@
+* Test
+
+.protect
+.inc '../lib/cktlib.lib'
+.unprotect
+
+.param suph = 3.6
+.param vcm = @vcm
+.param iib = @iib
+.param vvd = 0.0
+
+.option accurate captab
+
+.option post
+.opt scale = 0.2u
+
+.include '../classAB/ota_AB.net'
+xdut xib inm inp iout out vdda ota_w_bias
+xibias xib netxx ib bias
+xdiffdrv inp inm vd vc diffdrive
+mload iout iout 0 0 nmos L=4 W=4 M=20
+
+vdda vdda gnd 'suph' 
+ib vdda ib 'iib'
+
+vc vc gnd dc 'vcm'
+vd vd gnd dc 'vvd' 
+
+.tf v(out,gnd) vd
+
+$.dc vd poi 25 -2.5 -0.08 -0.07 -0.06 -0.05 -0.04 -0.03 -0.02 -0.01 0 0.01 0.02 0.03 0.04 0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 1.0 1.2 1.5
+$.dc vd poi 19 -2.5 -0.08 -0.07 -0.06 -0.05 -0.04 -0.03 -0.02 -0.01 0 0.01 0.03 0.05 0.1 0.3 0.4 0.6 1.0 1.5
+.dc vd poi 11 -2.5 -0.07 -0.02 -0.01 0 0.01 0.03 0.05 0.1 0.4 1.5
+.print dc i(xdut.msrc)
+.print dc i(xdut.mip)
+.print dc i(xdut.mim)
+.print dc i(mload) 
+.print dc v(out)
+
+.end

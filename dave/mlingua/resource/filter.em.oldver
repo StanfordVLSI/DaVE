@@ -1,0 +1,174 @@
+////////////////////////////////////////////
+// SISO Filter model using PWL approximation
+////////////////////////////////////////////
+
+/* Note Starts
+  - Filter signal input port name: si
+  - Filter signal output port name: so
+  - Filter parameters could be either parametrizable or adjustable through ports
+
+Ends Note */
+
+// include files
+@[for f in include_filename]
+`include "@f"
+@[end for]
+
+module @(module_name)(
+  @port_definition
+);
+
+timeunit @timeunit;
+timeprecision @timeprec;
+
+// DPI-C function if needed (only takes an input and produces a real output)
+@[for fn in dpi_function]
+import "DPI-C" pure function real @(fn)(input real x);
+@[end for]
+
+parameter TU = @timeunit_num; // timeunit in a number format
+
+// PWL accuracy-related parameters
+parameter etol = @etol; // error tolerance of PWL approximation
+parameter dtmin = @dt_min; // minimum time-step of PWL
+
+// User parameters
+@[for k, v in user_param.items()]
+parameter @k = @v;
+@[end for]
+
+// wires
+reg wakeup;  // wake-up signal
+real t0;  // time offset
+real t_cur;   // current time
+real Tintv;  // time interval of PWL waveform
+
+@filter_input_datatype si_at_t0;  // 
+real so_cur; // current output signal value
+@[if filter_output_datatype == 'pwl']
+real so_nxt;  // so at (t_cur+Tintv) for pwl output data
+real so_slope; // so slope
+@[end if]
+real so_init;  // output signal value offset (so_cur at t0)
+
+initial wakeup = 1'b0;
+
+// @@si_sensitivity is just "si" if it is piecewise constant waveform
+// otheriwse, it is "si.t0 or si.s0 or si.slope"
+always @@(@(si_sensitivity) or wakeup) begin
+  t_cur = $realtime*TU;
+  so_cur = fn_@(module_name)_at(t_cur-t0, si_at_t0, so_init @fn_input);
+@[if filter_input_datatype == 'real']
+  if (si != si_at_t0) begin
+@[end if]
+@[if filter_input_datatype == 'pwl']
+  if (si.a != si_at_t0.a || si.b != si_at_t0.b) begin
+@[end if]
+    t0 = t_cur;
+    so_init = so_cur;
+    si_at_t0 = si;
+  end
+  Tintv = calculate_Tintv_@(module_name)(etol, dtmin, t_cur-t0, si_at_t0, so_init @fn_input);
+  wakeup <= #(Tintv/TU) ~wakeup;
+@[if filter_output_datatype == 'real']
+  so = so_cur;
+@[end if]
+@[if filter_output_datatype == 'pwl']
+  so_nxt = fn_@(module_name)_at(t_cur-t0+Tintv, si_at_t0, so_init @fn_input);
+  so_slope = (so_nxt-so_cur)/Tintv;
+  so = '{t_cur, so_cur, so_slope};
+@[end if]
+end
+
+/*******************************************
+  Response function, its 1st/2nd derivatives
+*******************************************/
+
+function real fn_@(module_name)_at;
+input real t; 
+input @filter_input_datatype si; 
+input real so0 @fn_input;
+begin
+  fn_@(module_name)_at = @response_function;
+end
+endfunction
+
+function real fn1_@(module_name)_at;
+input real t; 
+input @filter_input_datatype si; 
+input real so0 @fn_input;
+begin
+  fn1_@(module_name)_at = @response_function_1st_derivative;
+end
+endfunction
+
+function real fn2_@(module_name)_at;
+input real t; 
+input @filter_input_datatype si; 
+input real so0 @fn_input;
+begin
+  fn2_@(module_name)_at = @response_function_2nd_derivative;
+end
+endfunction
+
+/*************************************
+  Caluating Tintv
+*************************************/
+
+function real estimate_Tintv_@(module_name);
+input real etol, min_step, t; 
+input @filter_input_datatype si; 
+input real so0 @fn_input;
+real dt1__, dt2__, t1__;
+begin
+  dt1__ = get_Tintv_bound_@(module_name)(etol, fn2_@(module_name)_at(t, si, so0 @fn_input), min_step);
+  t1__ = t+dt1__;
+  dt2__ = get_Tintv_bound_@(module_name)(etol, fn2_@(module_name)_at(t1__, si, so0 @fn_input), min_step);
+  estimate_Tintv_@(module_name) = min(dt1__, dt2__);
+end
+endfunction
+
+function real calculate_Tintv_@(module_name);
+input real etol, min_step, t; 
+input @filter_input_datatype si; 
+input real so0 @fn_input;
+real dt__, nxt_t;
+real err1, err2, err;
+real f_t0, f_t1, f1_t0, f1_t1, f_tsect, ft, t_sect;
+integer sgn_fn1_cur_t, sgn_fn1_nxt_t, idx;
+begin
+  dt__ = estimate_Tintv_@(module_name)(etol, min_step, t, si, so0 @fn_input);
+  do begin
+    if (dt__ <= min_step) break; 
+    nxt_t = t+dt__;
+    f_t0 = fn_@(module_name)_at(t, si, so0 @fn_input);
+    f_t1 = fn_@(module_name)_at(nxt_t, si, so0 @fn_input);
+    f1_t0 = fn1_@(module_name)_at(t, si, so0 @fn_input);
+    f1_t1 = fn1_@(module_name)_at(nxt_t, si, so0 @fn_input);
+    t_sect = (f_t1-f_t0+f1_t0*t-f1_t1*nxt_t)/(f1_t0-f1_t1);
+    f_tsect = fn_@(module_name)_at(t_sect, si, so0 @fn_input);
+    ft = f_t0 + (f_t1-f_t0)/dt__*(t_sect-t);
+    err = abs(ft - f_tsect);
+    if (err > etol) begin
+      dt__ = min(dt__/(err/etol), dt__/2.0);
+    end
+    else break;
+  end while (1);
+  calculate_Tintv_@(module_name) = snap_Tintv(dt__, min_step);
+end
+endfunction
+
+///////////////////////////////
+// get dT bound
+///////////////////////////////
+function real get_Tintv_bound_@(module_name);
+input real etol, f2_max, dt;
+real t;
+begin
+  if (etol > 1e15*abs(f2_max)) t = @tmax;
+  else t = sqrt(8.0*abs(etol/f2_max));
+  get_Tintv_bound_@(module_name) = snap_Tintv(t, dt);
+end
+endfunction
+
+endmodule

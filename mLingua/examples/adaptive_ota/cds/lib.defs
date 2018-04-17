@@ -1,0 +1,2 @@
+DEFINE regulator /home/bclim/proj/modeling/onchip_reg/cds/regulator
+ASSIGN regulator libMode shared

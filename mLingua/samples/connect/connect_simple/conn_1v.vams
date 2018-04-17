@@ -1,0 +1,8 @@
+`include "disciplines.vams"
+
+connectrules conn_1v;
+`define vdd 1.0
+  connect d2a #(.v1(1.0));
+  connect a2d #(.v1(1.0));
+  connect bidir #(.v1(1.0));
+endconnectrules

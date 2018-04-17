@@ -1,0 +1,3 @@
+# cds.lib
+INCLUDE $AMSHOME/tools/inca/files/cds.lib
+DEFINE connectLib ./connectLib

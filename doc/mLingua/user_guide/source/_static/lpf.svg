@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: cds2svg.il  -->
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd"
+[
+<!ENTITY INST_R1 "
+<text x='0' y='0' font-family='Helvetica' font-size='7500' font-weight='bold' fill='#CC0000' xml:space='preserve' text-anchor='start' transform='translate(9375,6250) rotate(0) scale(1,1) translate(0,-0) '>
+R1
+</text>
+<text x='0' y='0' font-family='Helvetica' font-size='7500' font-weight='bold' fill='#000000' xml:space='preserve' text-anchor='start' transform='translate(9375,15625) rotate(0) scale(1,1) translate(0,-0) '>
+r=20K
+</text>
+<polyline stroke='#006600' fill='none' stroke-width='2500' points='0,37500 0,30000 -6250,28125 6250,24375 -6250,20625 6250,16875 -6250,13125 6250,9375 0,7500 0,-0 ' />
+<rect stroke='none' fill='none' stroke-width='1250' x='-12500' y='-0' width='25000' height='37500' />
+<polygon stroke='#FF0000' fill='#FF0000' stroke-width='2500' points='-2500,-2500 2500,-2500 2500,2500 -2500,2500 ' />
+<polygon stroke='#FF0000' fill='#FF0000' stroke-width='2500' points='-2500,35000 2500,35000 2500,40000 -2500,40000 ' />
+">
+<!ENTITY INST_C2 "
+<text x='0' y='0' font-family='Helvetica' font-size='7500' font-weight='bold' fill='#CC0000' xml:space='preserve' text-anchor='start' transform='translate(6250,6250) rotate(0) scale(1,1) translate(0,-0) '>
+C2
+</text>
+<text x='0' y='0' font-family='Helvetica' font-size='7500' font-weight='bold' fill='#000000' xml:space='preserve' text-anchor='start' transform='translate(9375,15625) rotate(0) scale(1,1) translate(0,-0) '>
+c=50f
+</text>
+<polyline stroke='#006600' fill='none' stroke-width='2500' points='6250,13750 -6250,13750 ' />
+<polyline stroke='#006600' fill='none' stroke-width='2500' points='0,-0 0,13750 ' />
+<polyline stroke='#006600' fill='none' stroke-width='2500' points='0,17500 0,37500 ' />
+<path stroke='#006600' fill='none' stroke-width='2500' d='M6250,20126 A8750,8750 0 0,0 -6187,20063 ' />
+<rect stroke='none' fill='none' stroke-width='1250' x='-12500' y='-0' width='25000' height='37500' />
+<polygon stroke='#FF0000' fill='#FF0000' stroke-width='2500' points='-2500,-2500 2500,-2500 2500,2500 -2500,2500 ' />
+<polygon stroke='#FF0000' fill='#FF0000' stroke-width='2500' points='-2500,35000 2500,35000 2500,40000 -2500,40000 ' />
+">
+<!ENTITY INST_C1 "
+<text x='0' y='0' font-family='Helvetica' font-size='7500' font-weight='bold' fill='#CC0000' xml:space='preserve' text-anchor='start' transform='translate(6250,6250) rotate(0) scale(1,1) translate(0,-0) '>
+C1
+</text>
+<text x='0' y='0' font-family='Helvetica' font-size='7500' font-weight='bold' fill='#000000' xml:space='preserve' text-anchor='start' transform='translate(9375,15625) rotate(0) scale(1,1) translate(0,-0) '>
+c=500f
+</text>
+<polyline stroke='#006600' fill='none' stroke-width='2500' points='6250,13750 -6250,13750 ' />
+<polyline stroke='#006600' fill='none' stroke-width='2500' points='0,-0 0,13750 ' />
+<polyline stroke='#006600' fill='none' stroke-width='2500' points='0,17500 0,37500 ' />
+<path stroke='#006600' fill='none' stroke-width='2500' d='M6250,20126 A8750,8750 0 0,0 -6187,20063 ' />
+<rect stroke='none' fill='none' stroke-width='1250' x='-12500' y='-0' width='25000' height='37500' />
+<polygon stroke='#FF0000' fill='#FF0000' stroke-width='2500' points='-2500,-2500 2500,-2500 2500,2500 -2500,2500 ' />
+<polygon stroke='#FF0000' fill='#FF0000' stroke-width='2500' points='-2500,35000 2500,35000 2500,40000 -2500,40000 ' />
+">
+<!ENTITY INST_I0 "
+<polyline stroke='#006600' fill='none' stroke-width='2500' points='0,-0 0,18750 ' />
+<polygon stroke='#006600' fill='none' stroke-width='2500' points='-6250,18750 6250,18750 0,25000 ' />
+<rect stroke='#FF0000' fill='#FF0000' stroke-width='2500' x='-2500' y='-2500' width='5000' height='5000' />
+<rect stroke='none' fill='none' stroke-width='1250' x='-6250' y='-0' width='12500' height='25000' />
+<text x='0' y='0' font-family='Helvetica' font-size='7500' font-weight='bold' fill='#000000' xml:space='preserve' text-anchor='start' transform='translate(6250,15625) rotate(0) scale(1,1) translate(0,-0) '>
+gnd!
+</text>
+">
+]>
+<svg viewBox="36250 -131875 197500 194375" xmlns="http://www.w3.org/2000/svg" version="1.1">
+<rect stroke="#FFFFCC" fill="#FFFFCC" stroke-width="1" x="36250" y="-131875" width="197500" height="194375" />
+<polyline stroke="#0066FF" fill="#0066FF" stroke-width="2500" points="112500,-25000 112500,-50000 " />
+<polyline stroke="#0066FF" fill="#0066FF" stroke-width="2500" points="112500,-87500 112500,-112500 " />
+<polyline stroke="#0066FF" fill="#0066FF" stroke-width="2500" points="87500,-112500 112500,-112500 " />
+<polyline stroke="#0066FF" fill="#0066FF" stroke-width="2500" points="112500,-112500 175000,-112500 " />
+<ellipse stroke="#0066FF" fill="#0066FF" stroke-width="2500" cx="112500" cy="-112500" rx="3125" ry="3125" />
+<polyline stroke="#0066FF" fill="#0066FF" stroke-width="2500" points="175000,-56250 175000,-112500 " />
+<polyline stroke="#0066FF" fill="#0066FF" stroke-width="2500" points="175000,25000 175000,-18750 " />
+<polyline stroke="#0066FF" fill="#0066FF" stroke-width="2500" points="112500,25000 175000,25000 " />
+<polyline stroke="#0066FF" fill="#0066FF" stroke-width="2500" points="112500,25000 112500,12500 " />
+<polyline stroke="#0066FF" fill="#0066FF" stroke-width="2500" points="112500,37500 112500,25000 " />
+<ellipse stroke="#0066FF" fill="#0066FF" stroke-width="2500" cx="112500" cy="25000" rx="3125" ry="3125" />
+<polyline stroke="#000000" fill="none" stroke-width="2500" points="62500,-118750 93750,-118750 87500,-125000 " />
+<text x="0" y="0" font-family="Helvetica" font-size="9375" font-weight="bold" fill="#000000" xml:space="preserve" text-anchor="middle" transform="translate(71875,-125000) rotate(0) scale(1,1) translate(0,-0) ">
+Icp
+</text>
+<polyline stroke="#000000" fill="none" stroke-width="2500" points="93750,-62500 93750,-18750 87500,-25000 " />
+<text x="0" y="0" font-family="Helvetica" font-size="9375" font-weight="bold" fill="#000000" xml:space="preserve" text-anchor="middle" transform="translate(81250,-43750) rotate(0) scale(1,1) translate(0,-0) ">
+I1
+</text>
+<polyline stroke="#000000" fill="none" stroke-width="2500" points="212500,-87500 225000,-87500 " />
+<polyline stroke="#000000" fill="none" stroke-width="2500" points="218750,-93750 218750,-81250 " />
+<polyline stroke="#000000" fill="none" stroke-width="2500" points="212500,12500 225000,12500 " />
+<text x="0" y="0" font-family="Helvetica" font-size="9375" font-weight="bold" fill="#000000" xml:space="preserve" text-anchor="middle" transform="translate(225000,-43750) rotate(0) scale(1,1) translate(0,-0) ">
+Vc
+</text>
+<g transform="translate(112500,-87500) rotate(0) scale(1,1) ">
+&INST_R1;
+</g>
+<g transform="translate(175000,-56250) rotate(0) scale(1,1) ">
+&INST_C2;
+</g>
+<g transform="translate(112500,-25000) rotate(0) scale(1,1) ">
+&INST_C1;
+</g>
+<g transform="translate(112500,37500) rotate(0) scale(1,1) ">
+&INST_I0;
+</g>
+</svg>

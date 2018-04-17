@@ -1,0 +1,76 @@
+*********************************************************
+* Try to make the configurations as automatic as possible
+*********************************************************
+1. Use two metrics for comparison (DONE)
+  : Light-checking mode: Pin discrepancy mode
+    - quickly check if there is any interface-level discrepancy
+    - Simply checks the sign of each coefficient in linear regression with simple linear model (no interaction, no high-order)
+  : Deep-checking mode
+    - Allow interaction and poly-nomials
+    - check if the max residual error is less than the tolerance of the output
+
+- Adaptively changes the number of test vectors
+  : Try to fit the golden model by looking at the response residuals and see if the rate of change of response residuals as you exercise more test vectors
+- Provide pin brief pin discrepancy with simple linear regression (no polynomial, no interaction terms)
+- Get rid of wire section and let the tool automatically declare wires by looking up some cross-reference file (DONE)
+
+**************
+* Small tasks
+**************
+- Create a new, integrated package distribution script (DONE)
+- Create a simple licensing scheme for evaluation purpose (DONE)
+- Support Synopsys CustomSim for AMS simulation
+- Create more model/test templates. In particular, for RF systems
+- Explicitly declare Analog Input and Analog Control Input in port specification, such that the tool automatically generate a test to extract a transfer function from each analog input to analog output.
+- Add runcommand file
+  : e.g. bus_delimiter = <>
+- Adjust offset term of revised model to that of golden model for comparison if there is not any predictor variable. (DISCARDED)
+- Filter out insignificant predictors which embrace 0.0 in their confidence interval (DONE)
+
+
+**************
+* After V1.0
+**************
+
+V1.01
+-----
+- Get rid of wire section and let the tool automatically declare wires by looking up some cross-reference file (DONE)
+- Get rid of 'dut' field in a test configuration (DONE)
+- Change 'time' to 'timeend' for simulation time (DONE)
+- Get rid of 'timeprec' in [simulation] section and use 'timeunit' for 'timeprec' as well. (DONE)
+- Change keywords for regression section and fields in a test configuration (DONE)
+
+
+V1.02
+-----
+- Resurrect gain tolerance in a report (DONE)
+- change the keyword, 'timeend', in simulation section to 'trantime' (DONE)
+- Add copyright notifications to samples and examples (DONE)
+
+V1.05
+----
+- Get rid of "min_sample" and "no_of_grid" in mProbo. Let users specify "max_sample" instead. mProbo will terminate the checking before fully committing "max_sample" sampling. (DONE)
+- Simplify regression options (DONE)
+- Make equivalence criterion simple (e.g. remove gain tolerance spec.) (DONE)
+- Revise vector generation (DONE)
+- Update manual
+
+
+
+
+
+
+- Revise report generation
+
+********************
+1. dump.v: when te is too large, "iter" can be negative integer (DONE)
+2. Minimum number of test vector calculation. When interaction terms are considered, the # of vectors should be larger than the terms. In particular, it needs many vectors when there are quantized analog ports.
+3. In cached mode, run simulations if simulation directory does not exist. (DONE)
+4. txline.v has a bug
+5. interim checking result (DONE)
+6. add "port_reference file" argument for mProbo (DONE)
+
+
+
+********************
+1. Allow to configure ignorant digital mode

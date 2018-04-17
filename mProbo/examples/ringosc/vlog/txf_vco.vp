@@ -1,0 +1,109 @@
+/***********************************************
+ The module, `txf_vco`, scales the input PWL signal in piecewise linear 
+ way. That is,  it provides a way to build a DC transfer function using 
+ piecewise linear approximation. Thus it enables to model distortion effect 
+ (e.g. compressed gain) before going though a filter. Event control 
+ (asserted by "wakeup" signal) is also implemented here.
+
+ lookup table index of x
+  x[0]  <  x        then index = -1,        out = y[0]*in;
+  x[0] <= x < x[1]  then index = 0,         out = y[0]*in;
+  x[1] <= x < x[2]  then index = 1,         out = y[1]*in;
+  x[2] <= x < x[3]  then index = 2,         out = y[2]*in;
+  ...
+  x[LUTSize-1] <= x then index = LUTSize-1, out = y[LUTSize-1]*in;
+
+ dctxf.py will help you build such models from either
+  - simulation data (e.g. Ids vs. Vgs), or
+  - an analytic expression (fosc vs Vctrl)
+***********************************************/
+
+
+module txf_vco #(
+parameter vh = 1.0,  // upper bound of vreg [V]
+parameter vl = 0.0,  // lower bound of vreg [V]
+parameter vco0 = 1.5e9, // freq offset [Hz]
+parameter vco1 = 1e9   // freq gain [Hz/V]
+) (
+  input pwl in,
+  output pwl out
+);
+
+timeunit 1fs;
+timeprecision 1fs;
+`get_timeunit
+PWLMethod pm=new;
+
+
+
+pwl in_prev;
+event wakeup;
+//reg wakeup=1'b0;
+integer index;
+real t;
+real in_value;
+real slope;
+real scale;
+real dTr;
+real out_cur;
+time dT=1;
+time dTm, t_prev;
+reg event_in=1'b0;
+
+///////////////////////////////////////
+// LUT of DC Transfer Curve
+///////////////////////////////////////
+parameter integer LUTSize=3;
+real lutx[LUTSize-1:0]; // x-axis
+real luty[LUTSize-1:0]; // gain 
+real ly[LUTSize-1:0];   // offset to handle when luty[j]==0
+initial begin
+
+lutx[0] = vl-0.1; luty[0] = 0.0; ly[0] = vco0+vco1*vl; 
+lutx[1] = vl; luty[1] = vco1; ly[1] = vco0+vco1*vl; 
+lutx[2] = vh; luty[2] = 0.0; ly[2] = vco0+vco1*vh;
+end
+///////////////////////////////////////
+
+
+`protected
+I0+<0)7H,6+\>O<eVE?M>S[a[\EH:M=dF^A0W:8^?2b]e(19IadQ0)NM7?&d3dTV
+#aa2f->edPG:I:)=U-WOgfM69.UE^]H^CONRM]QTH18Z=Y>,1e0.5ZC48gb65DTc
+a>#\/ITH/<B-QC51ND^G[a1_2VE]LdVP4J0)eW7UNf.Va(A/;L+d0RPV/8T6Xb;)
+cU8f_:Q?<bgWg/\A?<[2dC<WQ.DC4N@fW6)W8d?(@K2Y+GOJPL^XUHD,(gg=3f^O
+9b#B,4P^R?fI_.JKXR5]cNaOS&]O_Xa=LW-1N1cPF(&6RKD#A[@CC_:=e27[Pa=:
+3^(5NaRVB,A/#I&&^ZN#fd3:/HUM64ecXR_A?#g<.V#[fBFHM-G&,XIU,,OUB=/7
+5BA6Z,UKN44f@U1_+(HeY1dT3/ET1HFO^O/G^1^MU-[SYY)>BW9X@C?VVRYUZMeY
+BR?RY/0;SG;9+EMQ1_(RD^ID]KH1fJP2LLTFX;G7Q8\,[LQ-_eHA[S\X+F/3fX@R
+X[(OMI5ObTM;9-M=e=))XV@4<A)<@,#PgI7FR;1,T13HLIeDdW:ODC9?L6/8?7_3
+g4;CfC&067[E/Q]:=;FV>K7]TRX2g2AFQc.&1D:\aTMN=O01A-@eA&CS(-C1c:/;
+)&U)<N=8P4PLRW6?5eZ7?E<a^YHIMgZ&7ZOP7aeUP;:1#?GeJNSX-/Bd,a9UKgED
+#53AVH\B0Pf0-[g/eDQTXIUEc,VfANFDKR^Pd0@^IKN8>S/eCF#F&A;784FWL@A9
+.^TTVWSDPM/AS]GfHER;6QSX7MdD@SNOP1@20XH3M<0dI>9Z]?GY4^R8R1\3/b7d
+[72b.H\O:F)K@&/.1dRT-]5-8T:62N0C9KR4<ZDJNR(^@1f50B#+L#7Xb=dPcXV?
+P]E47=CPFC:I(eIG9agFWKg7+S.@\:4J[&H,&^0H-aU>TJWDUad&a3TM<03d1g\<
+f5EV?:._&BNW643.)K,E\BJDCFVXY6N=?UeAAA=eCN?K:K<gd;fEV_cUBd.UJGZM
+)^GSEeQT#74MLE(49&T>a2.],@U6e/A]P(<V8#WR;I=R1cF;+(?,V>HOIf5I_)-S
+(XV[;gLdR1@Se+#3;?1d1XGPFB;c;B,0S9LI:.#RKF767]b?J+XEX0ML30;&_ARJ
+5-Rb]7&YQIEE05,=7a6MS8cg[/gI68Od37:N:PgH\A#YULQNC1/P:<@T385aWL62
+@b8[;ACHLSD>-@EcCGTcK-@J-IP#VbgGZ=;FJ^0X[/FE;CLF;<\R:B_04T4\KSaa
+M-YIMMgMD,FgGNeU<B3+9bg,#U4f.M_ZVcbG2>L9S:JZGWd2]7b8L8B#Oc[cUK@g
+QDQIKC8C)_cFPO38:H_#AQ<7TT6J@V:_JC;.#Z<YW@3D-/SF1)8/:3Q<=S3N^OJ:
+&U\)eO/XeUGfX>(VDQ3RVX/+5V+?TdVZ>bUMfDY-;<_YM@]XR#bQ?KffPCVH)Ba_
+Tce+da:>BKUdN2Zf1c1.W=Lac@I@He6&a/B/Lb/>8\OL-b5,;MaI@B?2&18Q<JWD
+c29I-^X-QUC9<IP2d@fUM^EB[7=a0BSYT+SLV+/S9fLI/Y+]b1\aA>XaT:\+(cA=
+eH+[WVJ,_Ra98<I=#AS>7N+WeEgaGV^0N5P@P7E.M:B]EI#3?FMG[bX>F_=]P_-X
+A(?gAc[Hbb48DY3T-KO8N1R-0#[C7fXd59^UZ>LBMFF+]UA^5#\e14Ac1LNZ5/1X
+=RT3<WXD,)9\f&T;NcY26dP@,+/01T#<FaPaTNded50;Z:M4E81Y2;T)2cJE#JH^
+=d#=@f4LDRBTUbH?FD0>[?_3SE_F?(OeP[MW;0d/\CXbfK&(eFg(E1Z]?0JKf5fI
+&-+Q+F25aG43Q2WFKdRL?8BfN?_aK1P/.cGW\E.5R]1Sg(55.S.UFOOba5XV=3M1
+9.WeN1&)fVa<=cXf>W83fXd\?196]VeP:(-g_[E>PJ&LY\?PY/Mb60//RQb[]Z#Z
+?=CI]-CHQeX7@5?NCT;.OQaJ<Ze:Xe>R,,H.LNAVKF1@E0./#?RRfdX0H_KNTeD:
+Y>V6cFAGJ<?5F8PNJ>,7YV5F-GMEgCP(H,)7bNcdS-dcXHN:P8;VWUR\H=:V.]H)
+>[6AX7;X3#<XceNVMH0b\WLN6^eS=ba[aCgM:c1]0M7;SJa6ea)B#D1BF/eaNM0;
+de6b@0L;MJ[+MY\>UT9.GH]I^HAKTD.W9/.0)OM@7VA0,=aQ0=&O77XQd9D[62&<
+e;e?AUUW?b[0N?I)9-^BcQ]f4a/V:&XM;$
+`endprotected
+
+
+endmodule

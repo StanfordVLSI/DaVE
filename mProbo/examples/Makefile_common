@@ -1,0 +1,30 @@
+# Makefile
+
+WM_DIRS := $(sort $(wildcard wm*))
+CLEAN_FILES := .mProbo* report.html mProbo*.log
+
+# default rule:
+all: run
+
+# vcs rule:
+#
+run:
+	@echo ""
+	@echo Running Model Checking for correct/wrong models
+	@echo ===============================================
+	@mProbo -p 2
+	@for d in $(WM_DIRS); do \
+	  pushd ${PWD} > /dev/null; \
+	  cd $$d; \
+	  mProbo -p 100; \
+	  popd > /dev/null; \
+  done
+
+clean:
+	@\rm -rf $(CLEAN_FILES)
+	@for d in $(WM_DIRS); do \
+	  pushd ${PWD} > /dev/null; \
+	  cd $$d; \
+		\rm -rf $(CLEAN_FILES); \
+	  popd > /dev/null; \
+  done

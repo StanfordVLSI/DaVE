@@ -1,0 +1,34 @@
+*******************************************************************************
+* 180nm SPICE Model Library
+*******************************************************************************
+
+.LIB TT
+.include '180nm.pm'
+
+** nMOS varactor model
+.SUBCKT nmos_var ng nds lr=0.2 wr=0.4
+** lr and wr in [meter] 
+.param area='(lr*wr)*1e12'
+.param pj='(lr+wr)*2*1e6'
+.param Cgmin='(0.1822*pj+1.4809*area)*1e-15'
+.param dCg='(-1*0.02472*pj+1.6923*area)*1e-15'
+$.param dVgs=-0.161
+.param dVgs=0.0
+.param Vgnorm=0.538
+cg ng nds 'Cgmin+dCg*(1.0+tanh((v(ng,nds)-dVgs)/Vgnorm))'
+.ENDS $ nmos_var
+*
+** pMOS varactor model
+.SUBCKT pmos_var ng nds lr=0.2 wr=0.4
+** lr and wr in [meter] 
+.param area='(lr*wr)*1e12'
+.param pj='(lr+wr)*2*1e6'
+.param Cgmin='(0.1822*pj+1.339*area)*1e-15'
+.param dCg='(-1*0.02472*pj+1.767*area)*1e-15'
+.param dVgs=0.282
+.param Vgnorm=0.59
+cg ng nds 'Cgmin+dCg*(1.0-tanh((v(ng,nds)-dVgs)/Vgnorm))'
+.ENDS $ pmos_var
+
+
+.ENDL

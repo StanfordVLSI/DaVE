@@ -1,0 +1,47 @@
+Technology Specifications:
+
+- NMOS 90nm bulk
+    Leff = 35nm     10%
+    Vth = 0.18V    30mV
+    Vdd = 1.2V
+    Tox = 1.4nm
+    Rdsw = 180ohm 
+
+- PMOS 90nm bulk
+    Leff = 35nm     10%
+    Vth = -0.18V    30mV
+    Vdd = 1.2V
+    Tox = 1.4nm
+    Rdsw = 200ohm
+
+- SCMOS settings:
+    lambda = 45nm
+    CAPMOD = 2
+    PERMOD = 1 (PS/PD includes the gate perimeter)
+    GEOMOD = 0 (default, no S/D shared or merged)
+
+    DMCG (distance from S/D contact center to the gate edge) = 3 lambdas
+    DMCI (distance from S/D contact center to the isolation edge in the channel-length direction) = 2 lambdas
+    DMDG    (same as DMCG but for merged device only) = 1.5 lambdas
+    DMCGT (DMCG of test structures) = 3 lambdas
+    DWJ (offset of the S/D junction width) = 0
+    XGW (distance from the gate contact to the channel edge) = 4 lambdas
+    XGL (offset of the gate length due to variations in patterning)
+
+- geoMod model selector table (From BSIM4 Manual, Ch. 12):
+    geoMod  End source  End drain   Note
+    0       isolated    isolated    NF=Odd
+    1       isolated    shared      NF=Odd, Even
+    2       shared      isolated    NF=Odd, Even
+    3       shared      shared      NF=Odd, Even
+    4       isolated    merged      NF=Odd
+    5       shared      merged      NF=Odd, Even
+    6       merged      isolated    NF=Odd
+    7       merged      shared      NF=Odd, Even
+    8       merged      merged      NF=Odd
+    9       sha/iso     shared      NF=Even
+    10      shared      sha/iso     NF=Even
+
+    * shared: with contacts
+      merged: without contacts
+

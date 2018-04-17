@@ -1,0 +1,13 @@
+@# Template for making OA table module
+from StringIO import StringIO
+
+__doc__ = """
+This contains some Orthogonal Array (OA) tables for test vector generation.
+"""
+
+
+@[for p,v in table.items()]
+@p=StringIO("""
+@v
+""")
+@[end for]

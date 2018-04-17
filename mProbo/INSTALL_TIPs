@@ -1,0 +1,15 @@
+1. pandas needs g++
+: sudo apt-get install g++
+
+2. scipy needs LAPACK/BLAS pkg:
+: sudo apt-get install gfortran libopenblas-dev liblapack-dev
+
+3. If a command not found while the file exists on ubuntu (x86_64), it is because the file is 32-bit binary
+: sudo apt-get install ia32-libs # UBUNTU
+: yum install glibc.i686 # CENTOS
+
+4. GUI editor needs Tkinterp in Python
+: $ apt-get install python-tk in debian linux
+: $ yum install tkinter in red hat linux
+
+5. To install matplotlib, installed freetype-devel and libpng-devel
