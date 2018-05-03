@@ -22,6 +22,7 @@ After loading the "DaVE" environment and your simulator environment, one can tes
 For analog model simulations, follow the steps below.
 
 $ cd mLingua/examples/spf/sim
+
 $ make
 
 If "DaVE" and Python libraries are installed correctly, you will see a post-script file ("spf_step_response.eps") which can be opened using Gostscript (command name is "gs").
@@ -29,6 +30,7 @@ If "DaVE" and Python libraries are installed correctly, you will see a post-scri
 For model equivalence checking, follow the steps below.
 
 $ cd mProbo/examples/amux
+
 $ mProbo -p 1
 
 If the setup is done correctly, you will see "mProbo" tool is running and it will generate "report.html" file after finishing the checking.
