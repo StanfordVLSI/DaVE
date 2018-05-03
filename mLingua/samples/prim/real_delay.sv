@@ -7,25 +7,25 @@ property of #LICENSOR#, and may not be disclosed or
 reproduced in whole or in part without explicit written 
 authorization from #LICENSOR#. Contact #EMAIL# for details.
 
-* Filename   : pwl_delay.v
+* Filename   : real_delay.sv
 * Author     : Byongchan Lim (bclim@stanford.edu)
 * Description: 
-  - It delays a pwl signal.
+  - It delays a real signal.
 
 * Note       :
 
 * Revision   :
-  - 7/26/2016: First release
+  - 00/00/2018: First release
 
 ****************************************************************/
 
 
-module pwl_delay #(
+module real_delay #(
   parameter real delay = 1.0,   // dealy in sec.
   parameter real scale = 1.0   // scale factor of input,
 ) (
-  `input_pwl in,      // pwl inputs
-  `output_pwl out     // pwl output
+  `input_real in,      // pwl inputs
+  `output_real out     // pwl output
 );
 
 timeunit `DAVE_TIMEUNIT ;
@@ -35,9 +35,9 @@ timeprecision `DAVE_TIMEUNIT ;
 //pragma protect 
 //pragma protect begin
 
-always @(`pwl_event(in)) 
+always @(in)
   if ($realtime==0) out = in;
-  else out <= #(delay*1s) pm.write(scale*in.a, scale*in.b, delay+in.t0);
+  else out <= #(delay*1s) in;
 
 //pragma protect end
 `endprotect

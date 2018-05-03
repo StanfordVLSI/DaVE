@@ -1,11 +1,11 @@
 /****************************************************************
 
-Copyright (c) 2018- Stanford University. All rights reserved.
+Copyright (c) #YEAR# #LICENSOR#. All rights reserved.
 
 The information and source code contained herein is the 
-property of Stanford University, and may not be disclosed or
+property of #LICENSOR#, and may not be disclosed or
 reproduced in whole or in part without explicit written 
-authorization from Stanford University. Contact bclim@stanford.edu for details.
+authorization from #LICENSOR#. Contact #EMAIL# for details.
 
 * Filename   : pwl_delay_prim.v
 * Author     : Byongchan Lim (bclim@stanford.edu)
@@ -36,11 +36,9 @@ timeprecision `DAVE_TIMEUNIT ;
 //pragma protect 
 //pragma protect begin
 
-`get_timeunit
-PWLMethod pm=new;
-
 always @(`pwl_event(in)) 
-  out <= `delay(max(delay,TU)) pm.write(scale*in.a, scale*in.b, delay+in.t0);
+  if ($realtime==0) out = in;
+  else out <= #(delay*1s) pm.write(scale*in.a, scale*in.b, delay+in.t0);
 
 //pragma protect end
 `endprotect
