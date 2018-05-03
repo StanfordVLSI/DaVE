@@ -247,6 +247,7 @@ authorization from Stanford University. Contact bclim@stanford.edu for details.
   import "DPI-C" pure function real sqrt(input real x);
   import "DPI-C" pure function real sin(input real x);
   import "DPI-C" pure function real cos(input real x);
+  import "DPI-C" pure function real atan(input real x);
   import "DPI-C" pure function real floor(input real x);
   
   `define M_PI 3.14159265358979323846   // pi in radian
