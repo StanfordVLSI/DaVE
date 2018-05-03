@@ -105,6 +105,12 @@ class CMath;
     abs = sqrt(e.r**2+e.i**2);
   end
   endfunction
+
+  function real phase(complex e);  // phase (e)
+  begin
+    phase = atan(im(e)/re(e))*`M_TWO_PI/360.0;
+  end
+  endfunction
 endclass
 
   ////////////////////////////////////
