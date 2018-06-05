@@ -70,7 +70,10 @@ $$[end if]
 
 // handling supply
 $$[if Pin.is_exist('vss')]
-pwl_add #(.no_sig(2)) xsupply (.in('{$$(Pin.name('vdd')),$$(Pin.name('vss'))}), .scale('{1.0,-1.0}), .out(supply));
+  pwl _vdd_vss[2]; real _k_vdd_vss[2];
+  assign _vdd_vss = '{$$(Pin.name('vdd')),$$(Pin.name('vss'))};
+  assign _k_vdd_vss = '{1.0, -1.0};
+pwl_add #(.no_sig(2)) xsupply (.in(_vdd_vss), .scale(_k_vdd_vss), .out(supply));
 $$[else]
 assign supply = vdd;
 $$[end if]

@@ -52,6 +52,8 @@ $$Pin.print_map() $$# map between user pin names and generic ones
 //----- BODY STARTS HERE -----
 
 //----- SIGNAL DECLARATION -----
+pwl ONE = `PWL1;
+pwl ZERO = `PWL0;
 
 pwl v_id_lim;   // limited v_id 
 pwl v_oc; // output common-mode voltage
@@ -81,9 +83,14 @@ initial ->> wakeup; // dummy event for ignition at t=0
 
 //-- Compute differential and common-mode voltages 
 
+  pwl _v_id[3]; pwl _v_icm[2]; real _k_v_id[3]; real _k_v_icm[2];
+  assign _k_v_id = '{1.0, -1.0, v_os};
+  assign _k_v_icm = '{0.5, 0.5};
+  assign _v_id = '{inp, inn, ONE};
+  assign _v_icm = '{inp, inn};
 // diff/cm sense considering input referred offset
-pwl_add #(.no_sig(3)) xidiff (.in('{inp,inn,'{v_os,0,0}}), .scale('{1,-1,1}), .out(v_id));
-pwl_add #(.no_sig(2)) xicm (.in('{inp,inn}), .scale('{0.5,0.5}), .out(v_icm));
+pwl_add #(.no_sig(3)) xidiff (.in(_v_id), .scale(_k_v_id), .out(v_id));
+pwl_add #(.no_sig(2)) xicm (.in(_v_icm), .scale(_k_v_icm), .out(v_icm));
 
 
 //-- System's parameter calculation
@@ -135,7 +142,7 @@ end
 //-- Model behaviors
 
 $$[if Metric.is_exist("compression")]
-pwl_limiter xi_lim (.scale('{1,0,0}), .maxout(vid_max), .minout(vid_min), .in(v_id), .out(v_id_lim)); // limiting input range for modeling gm compression 
+pwl_limiter xi_lim (.scale(ONE), .maxout(vid_max), .minout(vid_min), .in(v_id), .out(v_id_lim)); // limiting input range for modeling gm compression 
 $$[else]
 assign v_id_lim = v_id; // gain compression is not implemented
 $$[end if]
@@ -143,7 +150,7 @@ $$[end if]
 pwl_vga xgain (.in(v_id_lim), .scale(Av), .out(v_od)); // differential-mode gain stage 
 
 $$[if Metric.is_exist('filter')]
-pwl_filter_real_w_reset #(.etol(etol_f), .en_filter(1'b1), .filter($$filter_type)) xfilter (.fz1(fz1), .fp1(fp1), .fp2(fp2), .fp_rst(0.0), .in(v_od), .in_rst('{0,0,0}), .out(v_od_filtered), .reset(1'b0)); // differential output filtering
+pwl_filter_real_w_reset #(.etol(etol_f), .en_filter(1'b1), .filter($$filter_type)) xfilter (.fz1(fz1), .fp1(fp1), .fp2(fp2), .fp_rst(0.0), .in(v_od), .in_rst(ZERO), .out(v_od_filtered), .reset(1'b0)); // differential output filtering
 $$[else]
 assign v_od_filtered = v_od;  // filtering behavior is not implemented
 $$[end if]
@@ -151,11 +158,16 @@ $$[end if]
 real2pwl #(.tr(10e-12)) r2poc (.in(v_oc_r), .out(v_oc)); // output common-mode voltage
 
 // combine differential and common-mode output
+  pwl _v_od[2]; real _k_v_od_1[2]; real _k_v_od_2[2];
+  assign _v_od = '{v_oc, v_od_filtered};
 $$[if Pin.is_exist('outn')]
-pwl_add #(.no_sig(2)) xoutp (.in('{v_oc,v_od_filtered}), .scale('{1,0.5}), .out(outp));
-pwl_add #(.no_sig(2)) xoutn (.in('{v_oc,v_od_filtered}), .scale('{1,-0.5}), .out(outn));
+  assign _k_v_od_1 = '{1.0, 0.5};
+  assign _k_v_od_2 = '{1.0, -0.5};
+pwl_add #(.no_sig(2)) xoutp (.in(_v_od), .scale(_k_v_od_1), .out(outp));
+pwl_add #(.no_sig(2)) xoutn (.in(_v_od), .scale(_k_v_od_2), .out(outn));
 $$[else]
-pwl_add #(.no_sig(2)) xoutp (.in('{v_oc,v_od_filtered}), .scale('{1,1}), .out(outp));
+  assign _k_v_od_1 = '{1.0, 1.0};
+pwl_add #(.no_sig(2)) xoutp (.in(_v_od), .scale(_k_v_od_1), .out(outp));
 $$[end if]
 
 //pragma protect end

@@ -73,13 +73,19 @@ initial ->> init_wakeup;
 assign i_clk = $$('clk' if Pin.constraint('clk', 'act_high') else '~clk');
 
 //-- Compute input common-mode voltage
-pwl_add #(.no_sig(2)) xicm (.in('{inp,inn}), .scale('{0.5,0.5}), .out(v_icm));
+  pwl _v_icm[2]; real _k_v_icm[2];
+  assign _v_icm = '{inp,inn};
+  assign _k_v_icm = '{0.5, 0.5};
+pwl_add #(.no_sig(2)) xicm (.in(_v_icm), .scale(_k_v_icm), .out(v_icm));
 
 //-- System's parameter calculation
 
 // handling supply
 $$[if Pin.is_exist('vss')]
-pwl_add #(.no_sig(2)) xsupply (.in('{$$(Pin.name('vdd')),$$(Pin.name('vss'))}), .scale('{1.0,-1.0}), .out(supply));
+  pwl _vdd_vss[2]; real _k_vdd_vss[2];
+  assign _vdd_vss = '{$$(Pin.name('vdd')),$$(Pin.name('vss'))};
+  assign _k_vdd_vss = '{1.0, -1.0};
+pwl_add #(.no_sig(2)) xsupply (.in(_vdd_vss), .scale(_k_vdd_vss), .out(supply));
 $$[else]
 assign supply = vdd;
 $$[end if]
