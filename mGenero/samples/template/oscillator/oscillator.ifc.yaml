@@ -1,0 +1,81 @@
+module_name: oscillator
+
+description: Interface for a generic oscillator. Note that there is an optional input, actl, which is a control input to adjust the output frequency of an oscillator. If this input exists, in either current or voltage domain, the test and the generated model will be checking Kvco, gain compression, etc. If not exists, the test and the generated model simply calculates how the output frequency changes with inputs.
+
+pin:
+  vdd:
+    name: vdd
+    description: power supply
+    direction: input
+    datatype: pwl
+  vss:
+    name: vss
+    description: ground
+    direction: input
+    datatype: pwl
+    is_optional: True
+  actl:
+    name: actl
+    description: (optional) analog control of oscillation frequency (Kvco will be extracted wrt this input). You can add current contraint for CCO
+    direction: input
+    datatype: pwl
+    is_optional: True
+  outp:
+    name: outp
+    description: positive output clock
+    direction: output
+    datatype: logic
+  outn:
+    name: outn
+    description: (optional) negative output clock
+    direction: output
+    datatype: logic
+    is_optional: True
+
+metric: # optional behaviors to be incorporated in a model
+  compression:
+    description: Incorporate gain compression behavior
+      
+modelparam:
+  jitter:
+    description: jitter in normalized phase ( [0.0,1.0) )
+    datatype: real
+    value: 0.0
+  etol_ph:
+    description: resolution of normalized phase ( [0.0,1.0) )
+    datatype: real
+    value: 0.01
+  etol_v:
+    description: voltage resolution
+    datatype: real
+    value: 0.005
+  etol_i:
+    description: current resolution
+    datatype: real
+    value: 1e-6
+
+testparam:
+  vlog_timeunit:
+    description: verilog timeunit
+    value: 1ps
+  temperature:
+    description: temperature condition
+    value: 25.0
+  tol_freq:
+    description: tolerance of frequency
+    value: 100e6
+  est_freq:
+    description: representative output frequency to calculate ramp slope of a control voltage(current), i.e. actl. Meaningfule only when actl input exists
+    value: 100e6
+  test_max_sample:
+    description: estimated maximum number of test vectors for test1
+    value: 20
+  test_sensitivity:
+    description: sensitivity threshold for test1 in percent
+    value: 0.0
+  actl_min:
+    description: min value of actl to sweep. valid only if actl input exists
+    value: 0.0
+  actl_max:
+    description: max value of actl to sweep. valid only if actl input exists
+    value: 0.8

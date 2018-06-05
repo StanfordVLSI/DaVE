@@ -1,0 +1,22 @@
+####################################################
+# Custom Test configuration file for "lcvco_7GHz"
+####################################################
+
+[DEFAULT]
+  [[option]]
+    max_sample = 3
+    regression_sval_threshold = 0.0
+
+  [[port]]
+    [[[vdd]]]
+      port_type = analoginput
+      regions = 0.95, 1.05
+      pinned = True
+      default_value = 1.0
+      description = Power supply
+
+  [[testbench]]
+    [[[initial_condition]]] 
+      [[[[golden]]]]  # initial states for golden model only
+        dut.vcock = 0.0
+        dut.vcockb = 1.0
