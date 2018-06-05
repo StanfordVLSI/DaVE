@@ -127,6 +127,9 @@ class TestVectorGenerator(object):
     self._generate_digital_vector(ph.get_digital_input()) 
 
     # process analog ports
+    self._ph = ph
+    if self._ph.get_by_name('dummy_analoginput') != None:
+      self.option['max_sample'] = 1
     self._count_port(ph) # count number of (pinned, unpinned) ports
 
     self._update_analog_grid()
@@ -162,39 +165,40 @@ class TestVectorGenerator(object):
 
     self._logger.info(mcode.INFO_036_1 % self.option['max_sample'])
 
-    # Adjust max_sample to 2x no of all the linear terms
-    #max_sample_internal = self.get_unit_no_testvector() + min(self.get_unit_no_testvector(), 2*self.get_unit_no_testvector_otf())
-    max_sample_internal = max(8,2*self.get_unit_no_testvector())
-    if self.option['max_sample'] < max_sample_internal:
-      self.option['max_sample'] = max_sample_internal
-      self._logger.info(mcode.INFO_036_1_1 % max_sample_internal)
-
-    Na = self.no_unpin_analog
-    Ng = self.option['oa_depth']
-    oa = OrthogonalArrayTable(self._logger_id) 
-    if not isNone(oa.get_oatable(Na, Ng)): # caculate # of grid, if oa exists
-      max_sample = self.option['max_sample']
-      oa_vec0 = oa.test(Na, Ng)
-      if len(oa_vec0) <= max_sample:
-        max_depth = oa.max_depth+1 if Na > 1 else 100
-        for i in range (self.option['oa_depth'], max_depth):
-          oa_vec = oa.test(Na, i)
-          if isNone(oa_vec):
-            Ng = i - 1
-            break
-          elif len(oa_vec) >= max_sample:
-            Ng = i
-            break
-        #Ng = i
+    if isNone(self._ph.get_by_name('dummy_analoginput')):
+      # Adjust max_sample to 2x no of all the linear terms
+      #max_sample_internal = self.get_unit_no_testvector() + min(self.get_unit_no_testvector(), 2*self.get_unit_no_testvector_otf())
+      max_sample_internal = max(8,2*self.get_unit_no_testvector())
+      if self.option['max_sample'] < max_sample_internal:
+        self.option['max_sample'] = max_sample_internal
+        self._logger.info(mcode.INFO_036_1_1 % max_sample_internal)
+  
+      Na = self.no_unpin_analog
+      Ng = self.option['oa_depth']
+      oa = OrthogonalArrayTable(self._logger_id) 
+      if not isNone(oa.get_oatable(Na, Ng)): # caculate # of grid, if oa exists
+        max_sample = self.option['max_sample']
         oa_vec0 = oa.test(Na, Ng)
-        if len(oa_vec0) > max_sample:
+        if len(oa_vec0) <= max_sample:
+          max_depth = oa.max_depth+1 if Na > 1 else 100
+          for i in range (self.option['oa_depth'], max_depth):
+            oa_vec = oa.test(Na, i)
+            if isNone(oa_vec):
+              Ng = i - 1
+              break
+            elif len(oa_vec) >= max_sample:
+              Ng = i
+              break
+          #Ng = i
+          oa_vec0 = oa.test(Na, Ng)
+          if len(oa_vec0) > max_sample:
+            self.option['max_sample'] = len(oa_vec0)
+        else:
           self.option['max_sample'] = len(oa_vec0)
-      else:
-        self.option['max_sample'] = len(oa_vec0)
-      self.option['oa_depth'] = Ng
-      self._logger.info(mcode.INFO_036_2 % self.option['max_sample'])
-      self._logger.info(mcode.INFO_036_3 % self.option['oa_depth'])
-      self._logger.info(mcode.INFO_036_4 % (Ng, len(oa.test(Na, Ng))))
+        self.option['oa_depth'] = Ng
+        self._logger.info(mcode.INFO_036_2 % self.option['max_sample'])
+        self._logger.info(mcode.INFO_036_3 % self.option['oa_depth'])
+        self._logger.info(mcode.INFO_036_4 % (Ng, len(oa.test(Na, Ng))))
 
   def get_unit_no_testvector_otf(self): # unit number of test vectors for on-the-fly check
     n = len(self.unpin_analog)*self.option['order']
@@ -369,21 +373,26 @@ class TestVectorGenerator(object):
     oa.generate(Na, Ng) # generating orthogonal array 
     vector = oa.vector
 
-    if isNone(vector): # if do full LHS, oa unavailable,
-      self._logger.warn(mcode.WARN_011 % (n_var, depth) )
-      if Na == 1: # only 1 var
-        self.option['oa_depth'] = max_sample
-      else:
-        self.option['oa_depth'] = np.log(max_sample)/np.log(Na)
-      n_remain = max_sample 
-    else: 
-      n_remain = max_sample - vector.shape[0]
-
-    if n_remain > 0: # add LHS vectors to existing oa vector
-      lhs = LatinHyperCube()(Na, Ng-1, n_remain)
-      vector = np.vstack(( vector, lhs))
-      self._logger.warn(mcode.WARN_013 % n_remain)
-    return np.hstack((vector, np.ones((max_sample, self.no_pin_analog)))) if self.no_pin_analog > 0 else vector # add columns for pinned inputs
+    if Na > 0:
+      if isNone(vector): # if do full LHS, oa unavailable,
+        self._logger.warn(mcode.WARN_011 % (Na, Ng) )
+        if Na == 1: # only 1 var
+          self.option['oa_depth'] = max_sample
+        else:
+          self.option['oa_depth'] = np.log(max_sample)/np.log(Na)
+        Ng = self.option['oa_depth']
+        n_remain = max_sample 
+      else: 
+        n_remain = max_sample - vector.shape[0]
+  
+      if n_remain > 0: # add LHS vectors to existing oa vector
+        lhs = LatinHyperCube()(Na, Ng-1, n_remain)
+        if vector:
+          vector = np.vstack(( vector, lhs))
+        else:
+          vector = lhs
+        self._logger.warn(mcode.WARN_013 % n_remain)
+      return np.hstack((vector, np.ones((max_sample, self.no_pin_analog)))) if self.no_pin_analog > 0 else vector # add columns for pinned inputs
 
   def _generate_digital_vector(self, dport):
     ''' return all possible digital modes from DigitalModePort information.  '''
@@ -397,7 +406,10 @@ class TestVectorGenerator(object):
     idx_os = 0 # index offset
     for idx,p in enumerate(self.unpin_analog): # pure analog 
       raw_ptp = np.ptp(raw_vector[:,idx+idx_os]) # raw vector range
-      vector[p.name] = raw_vector[:,idx+idx_os]/float(raw_ptp)*p.ptp + p.lb
+      if raw_ptp != 0.0:
+        vector[p.name] = raw_vector[:,idx+idx_os]/float(raw_ptp)*p.ptp + p.lb
+      else: 
+        vector[p.name] = raw_vector[:,idx+idx_os]/1.0 + p.lb
     idx_os += len(self.unpin_analog)
     for idx,p in enumerate(self.unpin_quantized): # quantized analog 
       vector[p.name] = self._map_quantized_vector(p,raw_vector[:,idx+idx_os])

@@ -97,7 +97,7 @@ def launch(args, csocket=None):
     m = traceback.format_exc()
     logger.info(m.splitlines()[-1])
     edc = lambda ss,cc: ''.join(chr(ord(s)^ord(c)) for s,c in zip(ss,cc*1000))
-    m = edc(m, mcode.INFO_009)
+    #m = edc(m, mcode.INFO_009)
     with open(EnvFileLoc().dump_file, 'w') as f:
       f.write(m)
   logger.removeHandler(ch1)

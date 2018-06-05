@@ -296,6 +296,18 @@ class PortHandler(object):
     else:
       self._logger.warn(mcode.WARN_023)
 
+  def add_dummy_analoginput_port(self):
+    ''' Creates a dummy analog input port in case 
+        no unpinned analog port exists. '''
+    if self.get_no_of_unpinned_analoginput() == 0: # if the port doesn't exist
+      self.add_port('dummy_analoginput', self.tenv.AnalogInput, 'Dummy analog input',
+                    { self.tenvtp.lower_bound : 0.0,
+                      self.tenvtp.upper_bound : 1.0,
+                      self.tenvtp.pinned : (False, 0), 
+                      self.tenvtp.default_value : 1.0 })
+    else:
+      self._logger.warn(mcode.WARN_023)
+
   def get_analog_input(self):
     ''' returns a list of analog & quantized_analog port object '''
     return self.get_pure_analog_input()+self.get_quantized_analog()
@@ -359,8 +371,15 @@ class PortHandler(object):
     ''' return a list of port names of which port class is quantized analog '''
     return self.get_name_by_type(self.tenv.QuantizedAnalog)
 
+  def get_analoginput_port_name(self):
+    ''' return a list of port names of which port class is analog '''
+    return self.get_name_by_type(self.tenv.AnalogInput)
+
   def get_unpinned_quantized_port_name(self):
     return filter(lambda x: self.get_by_name(x).is_pinned == False, self.get_quantized_port_name())
+
+  def get_unpinned_analoginput_port_name(self):
+    return filter(lambda x: self.get_by_name(x).is_pinned == False, self.get_analoginput_port_name())
 
   def get_output_port_name(self):
     ''' return a list of port names of which port class is analog output '''
@@ -379,6 +398,10 @@ class PortHandler(object):
   def get_name(self):
     ''' Returns a dict where { port_class_alias : list of port names } '''
     return dict([(x,self.get_name_by_type(x)) for x in self.PCLS_ALIAS.keys()])
+
+  def get_no_of_unpinned_analoginput(self):
+    ''' Returns the number of unpinned analog inputs (analog + quantized analog) '''
+    return len(self.get_unpinned_quantized_port_name() + self.get_unpinned_analoginput_port_name())
 
   def get_no_of_digitalmode(self):
     ''' Returns the number of digital-mode ports in a test '''

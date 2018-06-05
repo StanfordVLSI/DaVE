@@ -260,7 +260,7 @@ dut = string(default='')
 description = string(default='')
 
 [[option]]
-min_no_of_analog_grid = integer(min=3, max=3, default=3)
+min_no_of_analog_grid = integer(min=1, max=1, default=1)
 max_sample = integer(min=8, default=8)
 #no_of_analog_grid = integer(min=2, default=2)
 regression_method = option("basic","filtered", default="basic")

@@ -4,7 +4,7 @@
 LOGO_001 = '''
 mProbo - Analog/Mixed-Signal Equivalence Checker
                   Version 0.8.5
- Copyright (c) 2014-2016 by Stanford University
+ Copyright (c) 2014-2018 by Stanford University
                ALL RIGHTS RESERVED
 
 This version is only for evaluation purpose. 
@@ -16,7 +16,7 @@ LOGO_002 = '''
 mProbo - Generation of Verilog testbench from Virtuoso 
       for Analog/Mixed-Signal Equivalence Checker
                    Version 0.8.5
- Copyright (c) 2014-2016 by Stanford University
+ Copyright (c) 2014-2018 by Stanford University
                ALL RIGHTS RESERVED
 
 This version is only for evaluation purpose. Any
@@ -40,7 +40,7 @@ LOGO_003 = '''
 
        Back annotate model parameters
                                      version 0.8.5
-    Copyright (c) 2015-2016 by Stanford University
+    Copyright (c) 2015-2018 by Stanford University
                                ALL RIGHTS RESERVED
 
 This version is only for evaluation purpose. Any
@@ -134,6 +134,7 @@ WARN_002 = "Test directory '%s' is created."
 WARN_003 = "Test directory '%s' already exists."
 WARN_004 = "The existing test directory is renamed to '%s'."
 WARN_005 = "There is no true digital port. A dummy true digital port, 'dummy_digitalmode', is created and set to 'b0'."
+WARN_005_1 = "There is no unpinned analog input port. A dummy analog input port, 'dummy_analoginput', is created."
 WARN_006 = 'The extracted wires mapped in instances are %s.' 
 WARN_007 = "The wires declared in 'wire' section of the test configuration file are %s." 
 WARN_008 = 'The wires between them are %s.' 

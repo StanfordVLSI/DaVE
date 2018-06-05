@@ -170,6 +170,7 @@ class TestUnit(object):
     vector = [dict(self._tvh.get_analog_vector(i), **mode) for i in range(max_run)]
 
     # run simulation for each test vector/ gather measurements
+    #if self._ph.get_by_name('dummy_analoginput') != None:
     if (not self._no_otfc) and (not self._cache): # unlesss on-the-fly check is disabled
       Nrun_u = max(8, self._tvh.get_unit_no_testvector()) # initial # of runs without on-the-fly
       if self.goldensim_only: # extraction mode
@@ -179,6 +180,9 @@ class TestUnit(object):
     else:
       Nrun_u = 1
       Nrun_uchk = 1
+    #else:
+    #  Nrun_u = 1
+    #  Nrun_uchk = 1
     sim_idx = 0
     #for i in range(0, max_run, Nrun_u):
     while sim_idx < max_run:
@@ -253,7 +257,7 @@ class TestUnit(object):
     ''' excercise a mode with generated (quantized) analog vectors 
           - mutiprocessing capability is supported, yet need to be improved 
     '''
-
+    
     np = self._np # number of threads
     for i in range(offset, offset+nrun):
       pretty_vector = dict([ (k, TestVectorGenerator.conv_tobin(self._ph, k, v)) for k, v in vector[i].items() ])
@@ -359,6 +363,12 @@ class TestUnit(object):
   def _run_linear_regression(self, mode, nth_mode, vector, meas_golden, meas_revised, quite=False):
     ''' perform linear regression on the output responses with test vectors of a single mode
     '''
+    if self._ph.get_by_name('dummy_analoginput') != None: # duplicates data for the case w/o unpinned analog inputs
+      #vector = dict([ (k, [list(v)[0]+i for i in range(20)]) for k,v in vector.items()])
+      vector = dict([ (k, [list(v)[0]]*20) for k,v in vector.items()])
+      meas_golden = dict([ (k, [list(v)[0]]*20) for k,v in meas_golden.items()])
+      meas_revised = dict([ (k, [list(v)[0]]*20) for k,v in meas_revised.items()])
+
     # load regression option
     regress_opt = self._load_regression_option() # option for deep comparison
     regress_opt_simple = copy.deepcopy(regress_opt) # option for light comparison
@@ -544,6 +554,10 @@ class TestUnit(object):
     if self._ph.get_no_of_digitalmode() == 0: 
       self._ph.add_dummy_digitalmode_port()
       self._logger.warn(mcode.WARN_005)
+    # create dummy analog input port if necessary
+    if self._ph.get_no_of_unpinned_analoginput() == 0: 
+      self._ph.add_dummy_analoginput_port()
+      self._logger.warn(mcode.WARN_005_1)
     # spit out ports information to logger
     self._logger.info(mcode.INFO_033)
     self._ph.get_info_all() 
