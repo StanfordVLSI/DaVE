@@ -153,7 +153,8 @@ always @(wakeup) begin
       else out = out;
     else
       out = pm.write(out_cur, out_slope, t_cur);
-    ->> #(dT) wakeup;
+    if (out.b != 0.0)
+      ->> #(dT) wakeup;
   end
 end
 
