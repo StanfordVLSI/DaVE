@@ -64,4 +64,4 @@ ifneq ($(strip $(PP_CMD)),)
 endif
 
 clean:
-	\rm -rf simv* csrc ucli.key vc_hdrs.h simv.log DVEfiles *vpd vcs.prof *.txt INCA_libs waves.shm ncverilog.log hdl.tcl ncprof.out shm.prof ncverilog.key .simvision *.eps
+	\rm -rf simv simv.* csrc ucli.key vc_hdrs.h simv.log DVEfiles *vpd vcs.prof *.txt INCA_libs waves.shm ncverilog.log hdl.tcl ncprof.out shm.prof ncverilog.key .simvision *.eps
