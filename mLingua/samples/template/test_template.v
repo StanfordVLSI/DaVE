@@ -1,11 +1,11 @@
 /****************************************************************
 
-Copyright (c) #YEAR# #LICENSOR#. All rights reserved.
+Copyright (c) 2018 Stanford University. All rights reserved.
 
 The information and source code contained herein is the 
-property of #LICENSOR#, and may not be disclosed or
+property of Stanford University, and may not be disclosed or
 reproduced in whole or in part without explicit written 
-authorization from #LICENSOR#.
+authorization from Stanford University.
 
 * Filename   : test.v
 * Author     : Byongchan Lim(bclim@stanford.edu)
