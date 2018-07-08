@@ -2,7 +2,7 @@
 
 # A sample setup file for DaVE
 
-setenv DAVE_INST_DIR /home/bclim/proj/StanfordVLSI/DaVE
+setenv DAVE_INST_DIR /home/bclim/proj/StanfordVLSI/DaVE # change this variable properly 
 setenv DAVE_SAMPLES ${DAVE_INST_DIR}/samples
 
 setenv mLINGUA_DIR ${DAVE_INST_DIR}/mLingua
@@ -31,4 +31,4 @@ endif
 
 set path = ( ${PYTHONHOME}/bin $path )
 
-module load incisive vcs
+#module load incisive vcs
