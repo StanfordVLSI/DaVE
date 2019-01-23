@@ -32,7 +32,5 @@ waves.shm
 
 mLingua/samples/connect/connect_lib/connectLib/*
 mLingua/samples/connect/connect_lib/connectLib/.*
-dave/common/checkeval.py
-dave/common/davemsg.py
 dave.lic
 distribution/*
