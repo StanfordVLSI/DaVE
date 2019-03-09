@@ -17,7 +17,7 @@ MODEL_HEADER = """{start}{duplicate}
 {duplicate}{end}
 """
 
-BACKANNOTATION_PRIMITIVE_FUNCTIONS = """
+BACKANNOTATION_API = """
 @{{
 lm_param = {lm_param}
 
