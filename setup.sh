@@ -3,7 +3,7 @@
 # A sample setup file for DaVE
 # Copyright (c) 2014-2016 by Byong Chan Lim. All rights reserved.
 
-export DAVE_INST_DIR="/home/bclim/proj/StanfordVLSI/DaVE" # change this variable properly 
+export DAVE_INST_DIR="/home/zamyers/DaVE/DaVE" # change this variable properly 
 export DAVE_SAMPLES="${DAVE_INST_DIR}/samples"
 
 export mLINGUA_DIR="${DAVE_INST_DIR}/mLingua"
@@ -23,13 +23,16 @@ fi
 export PATH="${DAVE_INST_DIR}/bin:${mPROBO_DIR}/bin:${mGENERO_DIR}/bin:${mLINGUA_DIR}/bin:$PATH"
 
 # Load anaconda environment 
-export PYTHONHOME="$HOME/anaconda2/envs/dave"
-if [ -z $LD_LIBRARY_PATH ]; then
-  export LD_LIBRARY_PATH="${PYTHONHOME}/lib:${LD_LIBRARY_PATH}"
-else 
-  export LD_LIBRARY_PATH="${PYTHONHOME}/lib"
-fi
+#export PYTHONHOME="$HOME/.conda/envs/dave"
+#if [ -z $LD_LIBRARY_PATH ]; then
+#  export LD_LIBRARY_PATH="${PYTHONHOME}/lib:${LD_LIBRARY_PATH}"
+#else 
+#  export LD_LIBRARY_PATH="${PYTHONHOME}/lib"
+#fi
 
-export PATH="${PYTHONHOME}/bin:$PATH"
+#export PATH="${PYTHONHOME}/bin:$PATH"
 
-#module load incisive vcs
+export PATH=/usr/local/miniconda/bin:$PATH
+module load base
+module load incisive vcs
+source activate dave
