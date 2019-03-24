@@ -20,7 +20,7 @@ from dave.mprobo.wire import TestBenchWire
 #-------------------------------------------------------------------------
 class TestConfig(object):
 
-  def __init__(self, cfg_filename, bypass=False, keep_raw=False, port_xref='', logger_id='logger_id'):
+  def __init__(self, cfg_filename, bypass=False, keep_raw=False, port_xref='', logger_id='logger_id', quite=False):
     ''' 
       set bypass to False if you don't want to create sub-regions of tests 
       set keep_raw to True if you keep the raw configuration
@@ -37,7 +37,8 @@ class TestConfig(object):
     self._tenvs = EnvTestcfgSection()
     self._logger = DaVELogger.get_logger('%s.%s.%s' % (logger_id, __name__, self.__class__.__name__))
     self._logger_id = logger_id
-    map(self._logger.info, print_section('Compile test configrations', 1))
+    if not quite:
+      map(self._logger.info, print_section('Compile test configrations', 1))
 
     if keep_raw:
       self.config = self._read_raw_config_file(cfg_filename)

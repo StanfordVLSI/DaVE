@@ -12,6 +12,7 @@ Note:
       of model generation, this $! will be replaced with $$.
 '''
 
+
 import sys
 import os
 import subprocess
@@ -25,6 +26,7 @@ from dave.mprobo.modelparameter import LinearModelParameter
 from model_header import MODEL_HEADER, BACKANNOTATION_API
 from dave.common.empyinterface import EmpyInterface
 from dave.common.misc import flatten_list, get_abspath, get_dirname, get_basename
+
 
 #---------------------------------
 class TemplateInterpreter(object):
@@ -42,16 +44,18 @@ class TemplateInterpreter(object):
   METACHAR  = '$$' 
   METACHAR2 = '$!' 
 
+  DEFAULT_API = os.path.join(os.environ['DAVE_INST_DIR'], 'dave/mgenero/api_mgenero.py')
+
   def __init__(self, api_file=None, logger=None):
-    '''
-      api_file: Python file that contains API functions used in model/test templates
-    '''
+    # api_file: Python file that contains API functions used in model/test templates
     self.logger = logger
     self._api_txt = self._embed_api(api_file)
+
 
   def generate_model(self, src_file, dst_file, param):
     # generate model without plugging in calibrated parameters 
     self.generate(src_file, dst_file, param, 'model', calibration=False)
+
 
   def generate_test(self, src_file, dst_file, param, calibration=False):
     # generate mProbo test 
@@ -60,9 +64,11 @@ class TemplateInterpreter(object):
     #   - check circuit/model equivalence (calibration=False)
     self.generate(src_file, dst_file, param, 'test', calibration)
 
+
   def backannotate_model(self, src_file, dst_file, param, lm_file):
     # back-annotate regression models to Verilog 
     self.generate(src_file, dst_file, param, 'model', calibration=False, ba_opt={'do_backannotate': True, 'lm_file': lm_file})
+
 
   def generate(self, src_file, dst_file, param, section, calibration=False, ba_opt={'do_backannotate':False, 'lm_file':''}):
     ''' Generate either Verilog model or mProbo test from a template 
@@ -109,16 +115,17 @@ class TemplateInterpreter(object):
       self.logger.error('[ERROR] template complilation error message: %s' % err)
       sys.exit()
       
+
   def _embed_api(self, api_file):
     # embed template API classes/methods to templates
     try: # check user-defined API 
       api_fullpath = get_abspath(api_file, True, self.logger) 
     except: # default API 
-      def_file = os.path.join(os.environ['DAVE_INST_DIR'], 'dave/mgenero/api_mgenero.py')
-      api_fullpath = get_abspath(def_file, True, self.logger)
+      api_fullpath = get_abspath(self.DEFAULT_API, True, self.logger)
       self.logger.info("[INFO] Use default API calls in '%s'" % api_fullpath)
     # the API will be executed in a template
     return '\n@{\n' + 'execfile("%s")' % api_fullpath + '}@\n'
+
 
   def _print_header(self, section):
     # print model header to a generated model 
@@ -128,6 +135,7 @@ class TemplateInterpreter(object):
     ll = '*' if section=='model' else '#'
     end = '*/' if section=='model' else '##'
     return MODEL_HEADER.format(software='mGenero', timestamp=t, start=start, duplicate=duplicate,end=end, ll=ll)
+
 
   def _embed_ba_api(self, lm_file):
     # add parameter back-annotatation related API calls to a model template 

@@ -33,6 +33,22 @@ authorization from Stanford University.
 * 3. fp1, fp2, fz1
 *******************************************************/
 
+$$#$${
+$$#import os
+$$#from dave.common.misc import *
+$$#def_file = os.path.join(os.environ['DAVE_INST_DIR'], 'dave/mgenero/api_mgenero.py')
+$$#api_fullpath = get_abspath(def_file, True, None)
+$$#api_dir = get_dirname(api_fullpath)
+$$#api_base = os.path.splitext(get_basename(api_fullpath))[0]
+$$#
+$$#import sys
+$$#if not api_fullpath in sys.path:
+$$#  import sys
+$$#  sys.path.append(api_dir)
+$$#from api_mgenero import *
+$$#
+$$#}$$
+
 module $$(Module.name()) #(
   $$(Module.parameters())
 ) (

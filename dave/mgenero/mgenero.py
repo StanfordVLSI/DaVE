@@ -14,6 +14,8 @@ from dave.common.davelogger import DaVELogger
 import dave.common.davemsg as davemsg
 from dave.mprobo.testconfig import TestConfig
 
+
+
 logging.basicConfig(filename='.mGenero_modelgen_debug.log',
                     filemode='w',
                     level=logging.DEBUG)
@@ -25,8 +27,6 @@ ch1 = logging.StreamHandler(open('mGenero.log', 'w'))
 ch1.setLevel(logging.INFO)
 logger.addHandler(ch1)
 
-__doc__ = """
-"""
 
 #-------------------------------------------------------------
 class ModelCreator(object):
@@ -42,6 +42,7 @@ class ModelCreator(object):
       api_file     : Python file that contains API functions of a template
       template_rootdir: Reserved 
     '''
+    self.usercfg = cfg_filename
     self._logger = DaVELogger.get_logger('%s.%s' % (__name__, self.__class__.__name__))
     self._display_logo()
     self.mc = UserConfiguration(cfg_filename, ifc_filename, template_rootdir, self._logger)
@@ -54,20 +55,21 @@ class ModelCreator(object):
 
 
   def generate_test(self, template_filename, dst_filename, usertest_filename='', calibration=False):
-    ''' Generate a mProbo test configuration.
-        - template_filename : Test template of a master cell
+    """ Generate a mProbo test configuration.
+        - template_filename : Test template of a cell
         - dst_filename : Test file name being generated
         - usertest_filename : if user test configuration (usertest_filename) is provided, 
                               that will overwrite/append to the generated test configuration 
                               from a template. 
-                              This is primarily to define specifications of ports in tests.
         - calibration: 
           - True  : for performing circuit property extraction 
           - False : for performing model/circuit equivalence checking
-    '''
+    """
     self.ip.generate_test(template_filename, dst_filename, self.mc.get_config(), calibration=calibration)
 
-    if os.path.exists(usertest_filename):
+    self._validate_test_spec(dst_filename)
+
+    if os.path.exists(usertest_filename): # if user provides addtional mProbo test configuration
       self._override_testcfg(dst_filename, usertest_filename)
       self._logger.info(self.msg1 % usertest_filename)
       self._logger.info(self.msg2 % (dst_filename+'.bak'))
@@ -89,17 +91,45 @@ class ModelCreator(object):
     # Check model/circuit equivalence using mProbo 
     run_equivalence(test_cfg, sim_cfg, report, no_processes)
 
+  def _write_cfg(self, cfg, filename):
+    with open(filename, 'w') as f:
+      cfg.write(f)
+
+  def _validate_test_spec(self, filename_A):
+    # compare two port section of test specifications 
+    # one is generated from a test template (A), the other is specified in user configuration file (B)
+    # Any test or port that doesn't exist in A, but do in B is ignored
+    # Any test or port that do exist in A, but doesn't in B take the value from A
+    self._logger.info( "\n[INFO-TESTSPEC] Updatiing the generated test configuration %s with the test specification in a user configuration file %s" % (filename_A, self.usercfg) )
+    filename_B = self.mc.get_testcfg_filename()
+    cfg_A = TestConfig(filename_A, bypass=True, keep_raw=True, quite=True).get_config()
+    cfg_B = TestConfig(filename_B, bypass=True, keep_raw=True, quite=True).get_config()
+    n_err = 0
+    for _t in cfg_B.keys(): # for each test
+      if _t not in cfg_A.keys(): # invalid test in test specification
+        self._logger.info( "[INFO-TESTSPEC] Test named %s in test spec does't exist in the generated test file. The corresponding test spec will be ignored." % _t )
+        continue
+      else:
+        for _p in cfg_B[_t]['port'].keys(): # each port name in B
+          if _p not in cfg_A[_t]['port'].keys(): # invalid port name
+            cfg_B[_t]['port'].pop(_p) # remove the port
+            self._logger.info( "[INFO-TESTSPEC] The port %s in a test named %s (test spec) does't exist in the generated test file. The corresponding test spec will be ignored." % (_p, _t) )
+
+    self._write_cfg(cfg_A, filename_A+'.org')
+    self._logger.info( "[INFO-TESTSPEC] The originally generated test configuration file is saved to %s." % (filename_A+'.org') )
+    cfg_A.merge(cfg_B)
+    self._write_cfg(cfg_A, filename_A)
+    os.remove(filename_B)
+    
+    
 
   def _override_testcfg(self, syscfg_filename, usrcfg_filename):
     # Override user test configuration to the configuration generated from a template 
-    def write(cfg, filename):
-      with open(filename, 'w') as f:
-        cfg.write(f)
-    cfg_sys = TestConfig(syscfg_filename, bypass=True, keep_raw=True).get_config()
-    cfg_usr = TestConfig(usrcfg_filename, bypass=True, keep_raw=True).get_config()
-    write(cfg_sys, syscfg_filename+'.bak')
+    cfg_sys = TestConfig(syscfg_filename, bypass=True, keep_raw=True, quite=True).get_config()
+    cfg_usr = TestConfig(usrcfg_filename, bypass=True, keep_raw=True, quite=True).get_config()
+    self._write_cfg(cfg_sys, syscfg_filename+'.bak')
     cfg_sys.merge(cfg_usr)
-    write(cfg_sys, syscfg_filename)
+    self._write_cfg(cfg_sys, syscfg_filename)
 
 
   def _display_logo(self):

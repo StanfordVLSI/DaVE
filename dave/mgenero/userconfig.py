@@ -6,8 +6,10 @@ process user configuration
 import sys
 import copy
 from dave.mgenero.interface import Interface
-from dave.common.misc import read_yaml
+from dave.common.misc import read_yaml, generate_random_str
 from collections import OrderedDict
+from configobj import ConfigObj
+
 
 
 #-------------------------------------------------------------
@@ -18,27 +20,41 @@ class UserConfiguration(object):
   '''
   def __init__(self, cfg_filename, ifc_filename, template_rootdir, logger=None):
     self.logger = logger
-    self.ifc = Interface.load(ifc_filename) # interface
-    self.cfg = read_yaml(cfg_filename, {Interface.key_pins:OrderedDict(), Interface.key_metrics:OrderedDict(), Interface.key_tparams:OrderedDict(), Interface.key_mparams:OrderedDict()}) # read user interface file
+    # read template interface
+    self.ifc = Interface.load(ifc_filename) 
+    # read user interface file and override the existing template configuration
+    self.cfg = read_yaml(cfg_filename, 
+                          { Interface.key_pins:OrderedDict(), 
+                            Interface.key_metrics:OrderedDict(), 
+                            Interface.key_tparams:OrderedDict(), 
+                            Interface.key_mparams:OrderedDict(),
+                            Interface.key_tspecs:OrderedDict(),
+                        }) 
 
     # run validation
     self.cfg_validated = {'template_rootdir': template_rootdir}
-    self.cfg_validated.update({self.ifc.key_gmname: self._validate_generic_module_name()})
+    self.cfg_validated.update({self.ifc.key_tname: self._validate_template_name()})
     self.cfg_validated.update({self.ifc.key_mname: self._validate_module_name()})
     self.cfg_validated.update({self.ifc.key_pins: self._validate_pins()})
     self.cfg_validated.update({self.ifc.key_metrics: self._validate_metrics()})
     self.cfg_validated.update({self.ifc.key_mparams: self._validate_modelparams()})
     self.cfg_validated.update({self.ifc.key_tparams: self._validate_testparams()})
+    self.testcfg_filename, testspec = self._generate_test_cfg()
+    self.cfg_validated.update({self.ifc.key_tspecs: testspec})
 
   def get_config(self):
     ''' return a user validated configuration to model creation class '''
     return self.cfg_validated
+  
+  def get_testcfg_filename(self):
+    # test configuration filename that describes test port specifications
+    return self.testcfg_filename
 
-  def _validate_generic_module_name(self):
-    key = self.ifc.key_mname
-    mname = self.ifc.get_module_name()
-    self.logger.info('[INFO] Generic module name is %s.' % mname)
-    return mname
+  def _validate_template_name(self):
+    key = self.ifc.key_tname
+    tname = self.ifc.get_template_name()
+    self.logger.info('[INFO] Template name is %s.' % tname)
+    return tname
 
   def _validate_module_name(self):
     key = self.ifc.key_mname
@@ -129,8 +145,6 @@ class UserConfiguration(object):
     params = copy.deepcopy(p_ifc)
     params = OrderedDict(params.items())
     p_usr_only = list(set(p_usr.keys())-set(p_ifc.keys()))
-    #params.update(dict([(p, p_usr[p]) for p in p_usr_only]))
-    #params.update(dict([(p, p_usr[p]) for p in p_usr]))
     params.update(OrderedDict([(p, p_usr[p]) for p in p_usr]))
 
     self.logger.info("[INFO-MODELPARAM] Model parameters from the interface are %s." % p_ifc.keys()) 
@@ -142,9 +156,22 @@ class UserConfiguration(object):
     p_usr = self.cfg[self.ifc.key_tparams]
     params = copy.deepcopy(p_ifc)
     p_usr_only = list(set(p_usr.keys())-set(p_ifc.keys()))
-    #params.update(dict([(p, p_usr[p]) for p in p_usr_only]))
     params.update(dict([(p, p_usr[p]) for p in p_usr]))
 
     self.logger.info("[INFO-TESTPARAM] Test parameters from the interface are %s." % p_ifc.keys()) 
     self.logger.info("[INFO-TESTPARAM] User-defined test parameters are %s." % p_usr_only) 
     return params
+
+  def _generate_test_cfg(self):
+    # it doesn't do validation
+    # it just spit out what's in the user configuration
+    # it's validation is done after test generation is done in ModelCreator.generate_test
+    p_usr = self.cfg[self.ifc.key_tspecs]
+    filename = generate_random_str('mgenero_', 5) + '.cfg'
+    cfg = ConfigObj()
+    cfg.filename = filename
+    params = copy.deepcopy(p_usr)
+    for k,v in params.items():
+      cfg[k] = {'port': v}
+    cfg.write()
+    return filename, params

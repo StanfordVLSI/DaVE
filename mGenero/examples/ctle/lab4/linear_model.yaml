@@ -1,0 +1,33 @@
+test1:
+  dcgain:
+  - coef:
+      offset: 0.7071497
+    mode:
+      dummy_digitalmode: 0
+  fp1:
+  - coef:
+      offset: 313218000.0
+    mode:
+      dummy_digitalmode: 0
+  fp2:
+  - coef:
+      offset: 2569420000.0
+    mode:
+      dummy_digitalmode: 0
+  fz1:
+  - coef:
+      offset: 36221670.0
+    mode:
+      dummy_digitalmode: 0
+test2:
+  max_swing:
+  - coef:
+      offset: 1.691075
+    mode:
+      dummy_digitalmode: 0
+test3:
+  v_oc:
+  - coef:
+      offset: 1.276681
+    mode:
+      dummy_digitalmode: 0
