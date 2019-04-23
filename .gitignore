@@ -29,6 +29,7 @@ hdl.tcl
 ncprof.out
 shm.prof
 waves.shm
+ncverilog.history
 
 mLingua/samples/connect/connect_lib/connectLib/*
 mLingua/samples/connect/connect_lib/connectLib/.*
