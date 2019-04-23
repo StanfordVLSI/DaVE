@@ -22,6 +22,9 @@ authorization from Stanford University. Contact bclim@stanford.edu for details.
 
 ****************************************************************/
 
+`ifndef __MLINGUA_PWL_VH__
+`define __MLINGUA_PWL_VH__
+
 /****************************************************
 * Timeunit/precision of Verilog library modules
 * Both timeunit and timeprecision will be the same
@@ -355,3 +358,5 @@ authorization from Stanford University. Contact bclim@stanford.edu for details.
 `endif
 
 `include "mLingua_util.vh"
+
+`endif // `ifndef __MLINGUA_PWL_VH__

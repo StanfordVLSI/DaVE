@@ -19,6 +19,9 @@ authorization from Stanford University. Contact bclim@stanford.edu for details.
 
 ****************************************************************/
 
+`ifndef __MLINGUA_UTIL_VH__
+`define __MLINGUA_UTIL_VH__
+
 /****************************************************
 * Utilities
 ****************************************************/
@@ -225,5 +228,5 @@ endclass
   endclass
 
 `endif
-
   
+`endif // `ifndef __MLINGUA_UTIL_VH__

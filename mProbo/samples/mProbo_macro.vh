@@ -18,6 +18,8 @@ authorization from Stanford University. Contact bclim@stanford.edu for details.
 
 ****************************************************************/
 
+`ifndef __MPROBO_MACRO_VH__
+`define __MPROBO_MACRO_VH__
 
 `ifdef AMS
   // get timeunit and assign it to TU
@@ -67,3 +69,4 @@ authorization from Stanford University. Contact bclim@stanford.edu for details.
     ground a; \
   `endif
 
+`endif // `ifndef __MPROBO_MACRO_VH__
