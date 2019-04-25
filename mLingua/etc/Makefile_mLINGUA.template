@@ -28,6 +28,9 @@ ifeq ($(strip $(SIMULATOR)),vcs)
 	./simv +vcs+finish+$(TRAN_TIME) -l simv.log +seed=$(VCS_RND_SEED)
 else ifeq ($(strip $(SIMULATOR)),ncsim)
 	@echo 'database -open waves.shm -into waves.shm -default' > hdl.tcl 
+ifneq ("$(wildcard probes.tcl)","")
+	cat probes.tcl >> hdl.tcl
+endif
 	@echo 'run $(TRAN_TIME)' >> hdl.tcl 
 	@echo 'exit' >> hdl.tcl
 	$(NCVLOG_CMD) $(mLINGUA_NCVLOG_FLAGS) -input hdl.tcl

@@ -18,3 +18,7 @@ ifneq ($(strip $(TIME_SCALE)),)
 	mLINGUA_NCVLOG_FLAGS += +nctimescale+$(TIME_SCALE)
 endif
 
+ifneq ("$(wildcard ncvlog.f)","")
+	mLINGUA_NCVLOG_FLAGS += -f ncvlog.f
+endif
+
