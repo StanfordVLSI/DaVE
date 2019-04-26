@@ -36,7 +36,11 @@ else ifeq ($(strip $(SIMULATOR)),ncsim)
 ifneq ("$(wildcard probes.tcl)","")
 	cat probes.tcl >> hdl.tcl
 endif
+ifneq ($(strip $(TRAN_TIME)),)
 	@echo 'run $(TRAN_TIME)' >> hdl.tcl 
+else
+	@echo 'run' >> hdl.tcl 
+endif
 	@echo 'exit' >> hdl.tcl
 	$(NCVLOG_CMD) $(mLINGUA_NCVLOG_FLAGS) -input hdl.tcl +ncaccess+r
 else
@@ -58,7 +62,11 @@ ifeq ($(strip $(SIMULATOR)),vcs)
 else ifeq ($(strip $(SIMULATOR)),ncsim)
 	@echo 'database -open waves.shm -into waves.shm -default' > hdl.tcl 
 	@echo 'probe -creat -shm -all -dynamic -depth all -memories' >> hdl.tcl
+ifneq ($(strip $(TRAN_TIME)),)
 	@echo 'run $(TRAN_TIME)' >> hdl.tcl 
+else
+	@echo 'run' >> hdl.tcl 
+endif
 	@echo 'exit' >> hdl.tcl 
 	$(NCVLOG_CMD) $(mLINGUA_NCVLOG_FLAGS) -input hdl.tcl +ncaccess+r
 else
@@ -75,7 +83,11 @@ profile:
 	@echo Profiling performance -- not dumping any waves
 	@echo ==================================================
 ifeq ($(strip $(SIMULATOR)),ncsim)
+ifneq ($(strip $(TRAN_TIME)),)
 	@echo 'run $(TRAN_TIME)' > hdl.tcl 
+else
+	@echo 'run' > hdl.tcl 
+endif
 	@echo 'exit' >> hdl.tcl 
 	$(NCVLOG_CMD) $(mLINGUA_NCVLOG_FLAGS) -input hdl.tcl -profile
 else
