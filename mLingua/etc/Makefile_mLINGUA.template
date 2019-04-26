@@ -15,13 +15,18 @@ ifeq ($(strip $(SIMULATOR)),)
 	SIMULATOR = ncsim
 endif
 
+ifeq ($(strip $(NCVLOG_CMD)),)
+	NCVLOG_CMD = ncverilog
+endif
+
 # default rule
  
 all: run
 
 run:
 	@echo ""
-	@echo Now Compiling in $(SIMULATOR)
+	@echo Now running in $(SIMULATOR)
+	@echo Dumping user-selected signals
 	@echo ==================================================
 ifeq ($(strip $(SIMULATOR)),vcs)
 	$(VCS_CMD) 
@@ -33,7 +38,7 @@ ifneq ("$(wildcard probes.tcl)","")
 endif
 	@echo 'run $(TRAN_TIME)' >> hdl.tcl 
 	@echo 'exit' >> hdl.tcl
-	$(NCVLOG_CMD) $(mLINGUA_NCVLOG_FLAGS) -input hdl.tcl
+	$(NCVLOG_CMD) $(mLINGUA_NCVLOG_FLAGS) -input hdl.tcl +ncaccess+r
 else
 	$(error Invalid value for SIMULATOR: $(SIMULATOR))
 endif	
@@ -44,7 +49,8 @@ endif
 
 wave:
 	@echo ""
-	@echo Now Compiling in $(SIMULATOR) with dumping waves
+	@echo Now running in $(SIMULATOR)
+	@echo Dumping all signals
 	@echo ==================================================
 ifeq ($(strip $(SIMULATOR)),vcs)
 	$(VCS_CMD) 
@@ -54,7 +60,24 @@ else ifeq ($(strip $(SIMULATOR)),ncsim)
 	@echo 'probe -creat -shm -all -dynamic -depth all -memories' >> hdl.tcl
 	@echo 'run $(TRAN_TIME)' >> hdl.tcl 
 	@echo 'exit' >> hdl.tcl 
-	$(NCVLOG_CMD) $(mLINGUA_NCVLOG_FLAGS)
+	$(NCVLOG_CMD) $(mLINGUA_NCVLOG_FLAGS) -input hdl.tcl +ncaccess+r
+else
+	$(error Invalid value for SIMULATOR: $(SIMULATOR))
+endif	
+
+ifneq ($(strip $(PP_CMD)),)
+	$(PP_CMD)
+endif
+
+profile:
+	@echo ""
+	@echo Now running in $(SIMULATOR)
+	@echo Profiling performance -- not dumping any waves
+	@echo ==================================================
+ifeq ($(strip $(SIMULATOR)),ncsim)
+	@echo 'run $(TRAN_TIME)' > hdl.tcl 
+	@echo 'exit' >> hdl.tcl 
+	$(NCVLOG_CMD) $(mLINGUA_NCVLOG_FLAGS) -input hdl.tcl -profile
 else
 	$(error Invalid value for SIMULATOR: $(SIMULATOR))
 endif	

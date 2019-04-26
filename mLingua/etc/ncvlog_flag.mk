@@ -6,7 +6,7 @@ mLINGUA_PLI_DIR := $(mLINGUA_DIR)/samples/pli
 
 # generate main flags for ncvlog
 
-mLINGUA_NCVLOG_FLAGS := -y . $(mLINGUA_VLOG_LIB_DIR) +incdir+$(mLINGUA_INC_DIR) -sv +libext+.v+.vp +libext+.sv +define+NCVLOG -loadpli1 ${mLINGUA_PLI_DIR}/libpli.so:dave_boot -sem2009 -seed random +nc64bit
+mLINGUA_NCVLOG_FLAGS := $(mLINGUA_VLOG_LIB_DIR) +incdir+$(mLINGUA_INC_DIR) -sv +libext+.v+.vp +libext+.sv +define+NCVLOG -loadpli1 ${mLINGUA_PLI_DIR}/libpli.so:dave_boot -sem2009 -seed random +nc64bit
 
 # append extra arguments as desired
 
@@ -21,4 +21,3 @@ endif
 ifneq ("$(wildcard ncvlog.f)","")
 	mLINGUA_NCVLOG_FLAGS += -f ncvlog.f
 endif
-
