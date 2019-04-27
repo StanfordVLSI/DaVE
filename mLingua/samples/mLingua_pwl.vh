@@ -29,8 +29,9 @@ authorization from Stanford University. Contact bclim@stanford.edu for details.
 * Timeunit/precision of Verilog library modules
 * Both timeunit and timeprecision will be the same
 ****************************************************/
-`define DAVE_TIMEUNIT 1ps
-
+`ifndef DAVE_TIMEUNIT
+	`define DAVE_TIMEUNIT 1ps
+`endif
 
 /****************************************************
 * PWL-related definition
