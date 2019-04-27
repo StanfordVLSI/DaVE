@@ -6,8 +6,9 @@
 
 # define flags used for various simulators
 
-include $(mLINGUA_DIR)/etc/vcs_flag.mk
-include $(mLINGUA_DIR)/etc/ncvlog_flag.mk
+#include $(mLINGUA_DIR)/etc/vcs_flag.mk
+#include $(mLINGUA_DIR)/etc/ncvlog_flag.mk
+include ./ncvlog_flag.mk
 
 # set default simulator
 
@@ -16,7 +17,7 @@ ifeq ($(strip $(SIMULATOR)),)
 endif
 
 ifeq ($(strip $(NCVLOG_CMD)),)
-	NCVLOG_CMD = ncverilog
+	NCVLOG_CMD = xrun
 endif
 
 # default rule
@@ -42,7 +43,7 @@ else
 	@echo 'run' >> hdl.tcl 
 endif
 	@echo 'exit' >> hdl.tcl
-	$(NCVLOG_CMD) $(mLINGUA_NCVLOG_FLAGS) -input hdl.tcl +ncaccess+r
+	$(NCVLOG_CMD) $(mLINGUA_NCVLOG_FLAGS) -input hdl.tcl -access r
 else
 	$(error Invalid value for SIMULATOR: $(SIMULATOR))
 endif	
@@ -68,7 +69,7 @@ else
 	@echo 'run' >> hdl.tcl 
 endif
 	@echo 'exit' >> hdl.tcl 
-	$(NCVLOG_CMD) $(mLINGUA_NCVLOG_FLAGS) -input hdl.tcl +ncaccess+r
+	$(NCVLOG_CMD) $(mLINGUA_NCVLOG_FLAGS) -input hdl.tcl -access r
 else
 	$(error Invalid value for SIMULATOR: $(SIMULATOR))
 endif	
@@ -99,4 +100,4 @@ ifneq ($(strip $(PP_CMD)),)
 endif
 
 clean:
-	\rm -rf simv simv.* csrc ucli.key vc_hdrs.h simv.log DVEfiles *vpd vcs.prof *.txt INCA_libs waves.shm ncverilog.log hdl.tcl ncprof.out shm.prof ncverilog.key .simvision *.eps ncverilog.history ncvlog.log xmprof.out xmverilog.key
+	\rm -rf simv simv.* csrc ucli.key vc_hdrs.h simv.log DVEfiles *vpd vcs.prof *.txt INCA_libs waves.shm ncverilog.log hdl.tcl ncprof.out shm.prof ncverilog.key .simvision *.eps ncverilog.history ncvlog.log xmprof.out xmverilog.key xrun.* xcelium.d
