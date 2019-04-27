@@ -6,9 +6,8 @@
 
 # define flags used for various simulators
 
-#include $(mLINGUA_DIR)/etc/vcs_flag.mk
-#include $(mLINGUA_DIR)/etc/ncvlog_flag.mk
-include ./ncvlog_flag.mk
+include $(mLINGUA_DIR)/etc/vcs_flag.mk
+include $(mLINGUA_DIR)/etc/ncvlog_flag.mk
 
 # set default simulator
 
