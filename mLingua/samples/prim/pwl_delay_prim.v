@@ -31,6 +31,8 @@ module pwl_delay_prim #(
 
 timeunit `DAVE_TIMEUNIT ;
 timeprecision `DAVE_TIMEUNIT ;
+
+PWLMethod pm = new;
  
 `protect
 //pragma protect 
