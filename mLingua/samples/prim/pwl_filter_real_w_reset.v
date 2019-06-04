@@ -22,6 +22,8 @@ authorization from Stanford University. Contact bclim@stanford.edu for details.
 
 ****************************************************************/
 
+`include "mLingua_pwl.vh"
+
 module pwl_filter_real_w_reset #(
   parameter real gain = 1.0,    // dc gain
   parameter real etol = 0.005,   // error tolerance of PWL approximation

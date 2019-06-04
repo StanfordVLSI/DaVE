@@ -31,6 +31,7 @@ authorization from Stanford University. Contact bclim@stanford.edu for details.
 
 ****************************************************************/
 
+`include "mLingua_pwl.vh"
 
 module pwl_filter_real_prime #(
   parameter etol = 0.005,     // error tolerance of PWL approximation
