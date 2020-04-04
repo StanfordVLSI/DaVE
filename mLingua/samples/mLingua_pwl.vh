@@ -197,9 +197,9 @@ authorization from Stanford University. Contact bclim@stanford.edu for details.
   // Real time calculation
   ////////////////////////
 
-  `define get_timeunit real TU; initial $get_timeunit(TU);
-  `define get_time  $realtime*TU
-  `define delay(t) #((t)/TU)
+  `define get_timeunit real TU; initial TU=1/1s;
+  `define get_time  $realtime/1s
+  `define delay(t) #((t)*1s)
   `define DT_MAX 1.0          // max value of allowed delta T [sec] for scheduling an event
 
 
