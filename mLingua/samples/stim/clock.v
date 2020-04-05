@@ -21,16 +21,24 @@ authorization from Stanford University. Contact bclim@stanford.edu for details.
 `timescale `DAVE_TIMEUNIT / `DAVE_TIMEUNIT
 
 module clock #(
-  parameter real freq = 1e9, // frequency
-  parameter real duty = 0.5, // duty cycle
-  parameter real td   = 0.0, // initial delay in second
-  parameter      b0   = 1'b0 // initial value
+    parameter real freq = 1e9,    // frequency
+    parameter real duty = 0.5,    // duty cycle
+    parameter real td   = 0.0,    // initial delay in second
+    parameter      b0   = 1'b0    // initial value
 ) (
-  output ckout, // clock output
-  output ckoutb // ~ckout
+    output ckout,                 // clock output
+    output ckoutb                 // inverted clock output
 );
 
-pulse #(.b0(b0), .td(td), .tw(duty/freq), .tp(1.0/freq)) xpulse ( .out(ckout), .outb(ckoutb) );
+    pulse #(
+        .b0(b0),
+        .td(td),
+        .tw(duty/freq),
+        .tp(1.0/freq)
+    ) xpulse (
+        .out(ckout),
+        .outb(ckoutb)
+    );
 
 endmodule
 
