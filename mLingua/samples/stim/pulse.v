@@ -19,7 +19,6 @@ authorization from Stanford University. Contact bclim@stanford.edu for details.
 ****************************************************************/
 
 `timescale `DAVE_TIMEUNIT / `DAVE_TIMEUNIT
-`include "mLingua_pwl.vh"
 
 module pulse #(
     parameter b0 = 0,            // initial bit value
@@ -41,17 +40,15 @@ module pulse #(
         output outb;
     `endif
 
-    `get_timeunit
-
     assign outb = ~out;
 
     initial begin
         out = b0;
-        #(td/TU) ;
+        #(td*1s);
         out = ~b0;
         forever begin
-            #(tw/TU) out = b0;
-            #((tp-tw)/TU) out = ~b0;
+            #(tw*1s) out = b0;
+            #((tp-tw)*1s) out = ~b0;
          end
     end
 
