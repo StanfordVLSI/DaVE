@@ -19,8 +19,6 @@ authorization from Stanford University. Contact bclim@stanford.edu for details.
 
 ****************************************************************/
 
-`timescale `DAVE_TIMEUNIT / `DAVE_TIMEUNIT
-
 // include files as necessary
 `ifdef AMS
     `include "disciplines.vams"
@@ -56,6 +54,9 @@ module meas_clock #(
         electrical period
         electrical dutycycle;
     `else
+        // declare timestep
+        timeunit `DAVE_TIMEUNIT ;
+        timeprecision `DAVE_TIMEUNIT ;
         // set up PWL
         `get_timeunit
         PWLMethod pm=new;
