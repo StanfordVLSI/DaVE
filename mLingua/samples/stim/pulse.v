@@ -18,8 +18,6 @@ authorization from Stanford University. Contact bclim@stanford.edu for details.
 
 ****************************************************************/
 
-`timescale `DAVE_TIMEUNIT / `DAVE_TIMEUNIT
-
 module pulse #(
     parameter b0 = 0,            // initial bit value
     parameter real td=10e-12,    // initial delay
@@ -38,6 +36,9 @@ module pulse #(
     `ifdef AMS
         output reg out;
         output outb;
+    `else
+        timeunit `DAVE_TIMEUNIT ;
+        timeprecision `DAVE_TIMEUNIT ;
     `endif
 
     assign outb = ~out;
