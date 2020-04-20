@@ -46,9 +46,6 @@ module pwl_filter_real_w_reset #(
 timeunit `DAVE_TIMEUNIT ;
 timeprecision `DAVE_TIMEUNIT ;
 
-`protect
-//pragma protect 
-//pragma protect begin
 `get_timeunit // get timeunit in sec and assign it to the variable 'TU'
 PWLMethod pm=new; // Method for PWL signal processing
 
@@ -70,9 +67,17 @@ always @(reset or `pwl_event(in_rst) or `pwl_event(in))
     si = pm.scale(in, gain, `get_time); wp1 = fp1*`M_TWO_PI; filter_type = filter;
   end
 
-pwl_filter_real_prime #(.etol(etol), .en_filter(en_filter)) xfilter (.in(si), .out(out), .wp1(wp1), .wp2(`M_TWO_PI*fp2), .wz1(`M_TWO_PI*fz1), .filter_type(filter_type), .en_complex(en_complex));
-  
-//pragma protect end
-`endprotect
+pwl_filter_real_prime #(
+    .etol(etol),
+    .en_filter(en_filter)
+) xfilter (
+    .in(si),
+    .out(out),
+    .wp1(wp1),
+    .wp2(`M_TWO_PI*fp2),
+    .wz1(`M_TWO_PI*fz1),
+    .filter_type(filter_type),
+    .en_complex(en_complex)
+);
 
 endmodule

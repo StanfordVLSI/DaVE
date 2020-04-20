@@ -20,29 +20,27 @@ authorization from Stanford University. Contact #EMAIL# for details.
 
 ****************************************************************/
 
+`include "mLingua_pwl.vh"
 
 module pwl_delay_prim #(
-  parameter real scale = 1.0   // scale factor of input,
+    parameter real scale = 1.0    // scale factor of input,
 ) (
-  `input_real delay,   // dealy in sec.
-  `input_pwl in,      // pwl inputs
-  `output_pwl out     // pwl output
+    `input_real delay,            // delay in sec.
+    `input_pwl in,                // pwl inputs
+    `output_pwl out               // pwl output
 );
 
-timeunit `DAVE_TIMEUNIT ;
-timeprecision `DAVE_TIMEUNIT ;
+    timeunit `DAVE_TIMEUNIT ;
+    timeprecision `DAVE_TIMEUNIT ;
 
-PWLMethod pm = new;
- 
-`protect
-//pragma protect 
-//pragma protect begin
+    PWLMethod pm = new;
 
-always @(`pwl_event(in)) 
-  if ($realtime==0) out = in;
-  else out <= #(delay*1s) pm.write(scale*in.a, scale*in.b, delay+in.t0);
-
-//pragma protect end
-`endprotect
+    always @(`pwl_event(in)) begin
+        if ($realtime==0) begin
+            out = in;
+        end else begin
+            out <= #(delay*1s) pm.write(scale*in.a, scale*in.b, delay+in.t0);
+        end
+    end
 
 endmodule

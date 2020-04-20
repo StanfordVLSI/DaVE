@@ -18,67 +18,39 @@ authorization from Stanford University. Contact bclim@stanford.edu for details.
 
 ****************************************************************/
 
-`timescale `DAVE_TIMEUNIT / `DAVE_TIMEUNIT
-
-////////////
-`ifndef AMS // NOT AMS
-////////////
-
 module pulse #(
-  parameter b0 = 0,         // initial bit value
-  parameter real td=10e-12, // initial delay
-  parameter real tw=0.5e-9, // pulse width
-  parameter real tp=1e-9    // pulse period
-) ( 
-  output reg out, 
-  output outb 
+    parameter b0 = 0,            // initial bit value
+    parameter real td=10e-12,    // initial delay
+    parameter real tw=0.5e-9,    // pulse width
+    parameter real tp=1e-9       // pulse period
+) (
+    `ifdef AMS
+        out,
+        outb
+    `else
+        output reg out,
+        output outb
+    `endif
 );
 
-`get_timeunit
+    `ifdef AMS
+        output reg out;
+        output outb;
+    `else
+        timeunit `DAVE_TIMEUNIT ;
+        timeprecision `DAVE_TIMEUNIT ;
+    `endif
 
-assign outb = ~out;
+    assign outb = ~out;
 
-initial begin
-  out = b0;
-  #(td/TU) ;
-  out = ~b0;
-  forever begin
-    #(tw/TU) out = b0;
-    #((tp-tw)/TU) out = ~b0;
-  end
-end
+    initial begin
+        out = b0;
+        #(td*1s);
+        out = ~b0;
+        forever begin
+            #(tw*1s) out = b0;
+            #((tp-tw)*1s) out = ~b0;
+         end
+    end
 
 endmodule
-
-////////////
-`else // AMS
-////////////
-
-module pulse #(
-  parameter b0 = 0, // initial value
-  parameter real td=10e-12, // initial delay
-  parameter real tw=0.5e-9, // pulse width
-  parameter real tp=1e-9    // pulse period
-) ( out, outb );
-
-output reg out;
-output     outb;
-
-`get_timeunit
-
-assign outb = ~out;
-
-initial begin
-  out = b0;
-  #(td/TU) ;
-  out = ~b0;
-  forever begin
-    #(tw/TU) out = b0;
-    #((tp-tw)/TU) out = ~b0;
-  end
-end
-endmodule
-
-////////////
-`endif
-////////////

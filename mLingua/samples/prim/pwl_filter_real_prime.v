@@ -53,9 +53,6 @@ module pwl_filter_real_prime #(
 timeunit `DAVE_TIMEUNIT ;
 timeprecision `DAVE_TIMEUNIT ;
 
-`protect
-//pragma protect 
-//pragma protect begin
 `get_timeunit // get timeunit in sec and assign it to the variable 'TU'
 PWLMethod pm=new; // Method for PWL signal processing
 
@@ -250,8 +247,5 @@ begin
   return min(`DT_MAX,max(TU,min(1.0,calcT)));
 end
 endfunction
-
-//pragma protect end
-`endprotect
 
 endmodule

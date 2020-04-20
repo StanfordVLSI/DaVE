@@ -197,9 +197,9 @@ authorization from Stanford University. Contact bclim@stanford.edu for details.
   // Real time calculation
   ////////////////////////
 
-  `define get_timeunit real TU; initial $get_timeunit(TU);
-  `define get_time  $realtime*TU
-  `define delay(t) #((t)/TU)
+  `define get_timeunit real TU; initial TU=1/1s;
+  `define get_time $realtime/1s
+  `define delay(t) #((t)*1s)
   `define DT_MAX 1.0          // max value of allowed delta T [sec] for scheduling an event
 
 
@@ -245,58 +245,101 @@ authorization from Stanford University. Contact bclim@stanford.edu for details.
 ****************************************************/
 `ifndef AMS
 
-  import "DPI-C" pure function real exp(input real x);
-  import "DPI-C" pure function real log(input real x);
-  import "DPI-C" pure function real log10(input real x);
-  import "DPI-C" pure function real sqrt(input real x);
-  import "DPI-C" pure function real sin(input real x);
-  import "DPI-C" pure function real cos(input real x);
-  import "DPI-C" pure function real atan(input real x);
-  import "DPI-C" pure function real floor(input real x);
+  `define M_PI 3.14159265358979323846                          // pi in radian
+  `define M_TWO_PI (2.0*`M_PI)                                 // two-pi in radian
+  `define rdist_normal(s,n) $dist_normal(s, 0, n)/(1.0*n)      // generate normal dist.
+  `define rdist_uniform(s,n) $dist_uniform(s, 0, n)/(1.0*n)    // generate uniform dist.
+
+  function real exp(input real x);
+      return $exp(x);
+  endfunction
+
+  function real log(input real x);
+      // TODO: check how this is used in DaVE to see ensure that
+      // this should be the natural logarithm
+      return $ln(x);
+  endfunction
+
+  function real log10(input real x);
+      return $log10(x);
+  endfunction
+
+  function real sqrt(input real x);
+      return $sqrt(x);
+  endfunction
+
+  function real sin(input real x);
+      return $sin(x);
+  endfunction
+
+  function real cos(input real x);
+      return $cos(x);
+  endfunction
+
+  function real atan(input real x);
+      return $atan(x);
+  endfunction
+
+  function real floor(input real x);
+      return $floor(x);
+  endfunction
+
+  function real min(real a0, real a1);
+      // min of two numbers
+      if (a0 >= a1) begin
+          return a1;
+      end else begin
+          return a0;
+      end
+  endfunction
+
+  function real max(real a0, real a1);
+      // max of two numbers
+      if (a0 >= a1) begin
+          return a0;
+      end else begin
+          return a1;
+      end
+  endfunction
+
+  function integer is_pinf(real x);
+      // check if +inf
+      if (x == 1.0/0.0) begin
+          return 1;
+      end else begin
+          return 0;
+      end
+  endfunction
+
+  function integer sgn(real x);
+      // return sign of a number
+      if (x > 0.0) begin
+          return 1;
+      end else if(x < 0.0) begin
+          return -1;
+      end else begin
+          return 0;
+      end
+  endfunction
   
-  `define M_PI 3.14159265358979323846   // pi in radian
-  `define M_TWO_PI (2.0*`M_PI) // two-pi in radian
-  `define rdist_normal(s,n) $dist_normal(s, 0, n)/(1.0*n)   // generate normal dist.
-  `define rdist_uniform(s,n) $dist_uniform(s, 0, n)/(1.0*n)   // generate uniform dist.
-
-  function real min(real a0, real a1);  // min of two numbers
-    if (a0 >= a1) return a1;
-    else return a0;
+  function real abs(real x);
+      // return absolute value
+      // TODO: can we simplify to sgn(x)*x?
+      if (x == -0) begin
+          return 0;
+      end else if (sgn(x) == -1) begin
+          return x*-1.0;
+      end else begin
+          return x;
+      end
   endfunction
 
-  function real max(real a0, real a1);  // max of two numbers
-    if (a0 >= a1) return a0;
-    else return a1;
-  endfunction
-
-  function integer is_pinf(real x); // check if +inf
-    if (x == 1.0/0.0) return 1;
-    else return 0;
-  endfunction
-
-  function integer sgn(real x); // return sign of a number
-  begin
-    if (x > 0.0) return 1;
-    else if(x < 0.0) return -1;
-    else return 0;
-  end
-  endfunction
-  
-  function real abs(real x);  // return absolute value
-  begin
-    if (x == -0) return 0;
-    if (sgn(x) == -1) return x*-1.0;
-    else return x;
-  end
-  endfunction
-
-  function bit isnan (real x);  // check if it is Not-a-Number
-  reg [63:0] r2b;
-  begin
-    r2b = x;
-    if (r2b == 0) return 1'b1;
-    else return 1'b0;
-  end
+  function bit isnan (real x);
+      // check if it is Not-a-Number
+      reg [63:0] r2b;
+      r2b = x;
+      if (r2b == 0) return 1'b1;
+      else return 1'b0;
   endfunction
 
 `endif
