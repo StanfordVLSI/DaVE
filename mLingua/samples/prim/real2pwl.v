@@ -22,6 +22,7 @@ authorization from Stanford University. Contact bclim@stanford.edu for details.
 
 ****************************************************************/
 
+`include "mLingua_pwl.vh"
 
 module real2pwl #(
   parameter real tr = 100e-12 // transition time
@@ -38,7 +39,7 @@ timeprecision `DAVE_TIMEUNIT ;
 
 pullup(en);
 
-`protect
+//`protect
 //pragma protect 
 //pragma protect begin
 
@@ -79,6 +80,6 @@ always @(in or wakeup or en) begin
 end
 
 //pragma protect end
-`endprotect
+//`endprotect
 
 endmodule
