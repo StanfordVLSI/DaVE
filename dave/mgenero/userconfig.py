@@ -66,15 +66,15 @@ class UserConfiguration(object):
     p_ifc = self.ifc.pins_to_dict()
     p_usr = self.cfg[self.ifc.key_pins]
     # temperary fix
-    for k,v in p_usr.items():
-      if 'is_pinonly' not in v.keys():
+    for k,v in list(p_usr.items()):
+      if 'is_pinonly' not in list(v.keys()):
         p_usr[k]['is_pinonly'] = False
     # categorize the types of pins
-    essential_pins = sorted([p for p in p_ifc.keys() if not p_ifc[p]['is_optional']])
+    essential_pins = sorted([p for p in list(p_ifc.keys()) if not p_ifc[p]['is_optional']])
     optional_pins = sorted(list(set(p_ifc.keys()) - set(essential_pins)))
-    user_pins = sorted([p for p in p_usr.keys() if p not in p_ifc.keys()])
-    missing_ess_pins_usr = sorted([p for p in essential_pins if p not in p_usr.keys()])
-    missing_opt_pins_usr = sorted([p for p in optional_pins if p not in p_usr.keys()])
+    user_pins = sorted([p for p in list(p_usr.keys()) if p not in list(p_ifc.keys())])
+    missing_ess_pins_usr = sorted([p for p in essential_pins if p not in list(p_usr.keys())])
+    missing_opt_pins_usr = sorted([p for p in optional_pins if p not in list(p_usr.keys())])
     valid_optional_pins = sorted(list(set(optional_pins) - set(missing_opt_pins_usr)))
     pinonly_user_pins = sorted([p for p in user_pins if p_usr[p]['is_pinonly']])
 
@@ -92,16 +92,16 @@ class UserConfiguration(object):
     pins = OrderedDict()
     for p in essential_pins:
       pins.update({p:p_ifc1[p]})
-      if p in p_usr.keys(): pins[p].update(p_usr[p])
+      if p in list(p_usr.keys()): pins[p].update(p_usr[p])
     for p in valid_optional_pins:
       pins.update({p:p_ifc1[p]})
       pins[p].update(p_usr[p])
-      if 'is_pinonly' not in pins[p].keys():
+      if 'is_pinonly' not in list(pins[p].keys()):
         pins[p].update({'is_pinonly':False})
     for p in user_pins:
       pins.update({p:p_usr[p]}) # A user pin is also an optional pin
       pins[p].update({'is_optional': True}) # A user pin is also an optional pin
-      if 'vectorsize' not in pins[p].keys():
+      if 'vectorsize' not in list(pins[p].keys()):
         pins[p].update({'vectorsize':1})
     valid_pins = sorted(pins.keys())
     self.logger.info("[INFO-PIN] Valid pins are %s." % valid_pins)
@@ -120,8 +120,8 @@ class UserConfiguration(object):
     m_ifc = self.ifc.metrics_to_dict()
     m_usr = self.cfg[self.ifc.key_metrics] 
 
-    available_metrics = m_ifc.keys()
-    defined_metrics = m_usr.keys()
+    available_metrics = list(m_ifc.keys())
+    defined_metrics = list(m_usr.keys())
     undefined_metrics = list(set(available_metrics)-set(defined_metrics))
     invalid_metrics = list(set(defined_metrics)-set(available_metrics))
     valid_metrics = list(set(defined_metrics)-set(invalid_metrics))
@@ -143,11 +143,11 @@ class UserConfiguration(object):
     p_ifc = self.ifc.modelparams_to_dict()
     p_usr = self.cfg[self.ifc.key_mparams]
     params = copy.deepcopy(p_ifc)
-    params = OrderedDict(params.items())
+    params = OrderedDict(list(params.items()))
     p_usr_only = list(set(p_usr.keys())-set(p_ifc.keys()))
     params.update(OrderedDict([(p, p_usr[p]) for p in p_usr]))
 
-    self.logger.info("[INFO-MODELPARAM] Model parameters from the interface are %s." % p_ifc.keys()) 
+    self.logger.info("[INFO-MODELPARAM] Model parameters from the interface are %s." % list(p_ifc.keys())) 
     self.logger.info("[INFO-MODELPARAM] User-defined model parameters are %s." % p_usr_only) 
     return params
 
@@ -158,7 +158,7 @@ class UserConfiguration(object):
     p_usr_only = list(set(p_usr.keys())-set(p_ifc.keys()))
     params.update(dict([(p, p_usr[p]) for p in p_usr]))
 
-    self.logger.info("[INFO-TESTPARAM] Test parameters from the interface are %s." % p_ifc.keys()) 
+    self.logger.info("[INFO-TESTPARAM] Test parameters from the interface are %s." % list(p_ifc.keys())) 
     self.logger.info("[INFO-TESTPARAM] User-defined test parameters are %s." % p_usr_only) 
     return params
 
@@ -171,7 +171,7 @@ class UserConfiguration(object):
     cfg = ConfigObj()
     cfg.filename = filename
     params = copy.deepcopy(p_usr)
-    for k,v in params.items():
+    for k,v in list(params.items()):
       cfg[k] = {'port': v}
     cfg.write()
     return filename, params

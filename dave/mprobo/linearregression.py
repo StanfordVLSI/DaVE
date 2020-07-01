@@ -12,7 +12,7 @@ from itertools import product, combinations, groupby
 from operator import itemgetter
 
 from dave.common.davelogger import DaVELogger
-from environ import EnvTestcfgOption
+from .environ import EnvTestcfgOption
 from dave.common.misc import flatten_list
 import dave.mprobo.mchkmsg as mcode
 
@@ -37,7 +37,7 @@ class LinearRegression(object):
   def update_option(self, option):
     ''' update option & do_not_regress dict '''
     self._option.update(option)
-    if self._tenv.regression_do_not_regress in option.keys():
+    if self._tenv.regression_do_not_regress in list(option.keys()):
       self.regression_do_not_regress.update(option[self._tenv.regression_do_not_regress])
 
   def load_data(self, dv, iv, option={}):
@@ -50,17 +50,17 @@ class LinearRegression(object):
     self.dv = dv
     self.iv = iv
     self.quantizedport_name = option['qaport_name']
-    self.regression_do_not_regress = dict([(x,[x]) for x in self.dv.keys()]) # one could not be a predictor variable of oneself.
+    self.regression_do_not_regress = dict([(x,[x]) for x in list(self.dv.keys())]) # one could not be a predictor variable of oneself.
     self.update_option( {self._tenv.regression_do_not_regress : self.regression_do_not_regress} )
     self.update_option(option)
-    self.dv_iv_map = self._make_dv_iv_map(self.dv.keys(), self.iv.keys(), self.regression_do_not_regress)
+    self.dv_iv_map = self._make_dv_iv_map(list(self.dv.keys()), list(self.iv.keys()), self.regression_do_not_regress)
     self.binary_iv = self._get_binary_predictors(self.iv) 
     #self.iv = dict(self.iv.items() + self.dv.items()) # output could be a predictor of another output
 
 
   def _get_binary_predictors(self, iv):
     ''' Get iv with binary data type ''' 
-    return [k for k,v in iv.items() if filter(lambda x: float(x) not in [1.0,0.0], v)==[]]
+    return [k for k,v in list(iv.items()) if [x for x in v if float(x) not in [1.0,0.0]]==[]]
 
   def _make_dv_iv_map(self, dv_item, iv_item, do_not_regress):
     ''' Create a mapping between dep. var and indep. var 
@@ -71,7 +71,7 @@ class LinearRegression(object):
     '''
     dv_item = sorted(dv_item)
     iv_item = sorted(iv_item)
-    return dict([ (p,filter(lambda v: v not in do_not_regress[p], iv_item)) for p in dv_item ])
+    return dict([ (p,[v for v in iv_item if v not in do_not_regress[p]]) for p in dv_item ])
 
 
   def _make_formula(self, dv_iv_map, basis, order, en_interact, user_model):
@@ -84,8 +84,8 @@ class LinearRegression(object):
             and  the first order interaction terms between iv's
     '''
     formula = {}
-    for dv in dv_iv_map.keys(): # for each output
-      if dv in user_model.keys(): # user-provided model if exists
+    for dv in list(dv_iv_map.keys()): # for each output
+      if dv in list(user_model.keys()): # user-provided model if exists
         formula[dv] = user_model[dv] 
         if formula[dv] == '': # if user model is NULL
           formula[dv] = '1'
@@ -103,7 +103,7 @@ class LinearRegression(object):
       if p == 0: # 1st order term
         term = ['%s' % v for v in dv_iv]
         if len(dv_iv) > 1 and en_interact == True: # add interact terms between predictors
-          interact = filter(lambda x: x[0] != x[1], list(product(dv_iv, dv_iv)))
+          interact = [x for x in list(product(dv_iv, dv_iv)) if x[0] != x[1]]
           term = term+[ self._interact_R(x[0], x[1]) for x in interact 
                         if re.sub(r'_\d+$','',x[0]) != re.sub(r'_\d+$','',x[1]) ]
       else: # higher order term
@@ -205,7 +205,7 @@ class LinearRegressionSM(LinearRegression):
 
   def _make_suggested_formula(self, dv_iv_map):
     ''' make formula from given terms '''
-    return dict( [(d, '+'.join(dv_iv_map[d])) for d in dv_iv_map.keys()] )
+    return dict( [(d, '+'.join(dv_iv_map[d])) for d in list(dv_iv_map.keys())] )
 
   def _create_model(self, ignore_usermodel=False):
     # write formula of regression model
@@ -223,7 +223,7 @@ class LinearRegressionSM(LinearRegression):
 
     # build/get statistics from the linear regression model, and calculate normalized input sensitivity
     self.ols_stat = self._build_statistics(self.model_ols) 
-    self._normalized_sensitivity = dict( [(k, calculate_normalized_sensitivity(self.get_predictors()[k], self, self.ols_stat, k)) for k in self.dv_iv_map.keys()] )
+    self._normalized_sensitivity = dict( [(k, calculate_normalized_sensitivity(self.get_predictors()[k], self, self.ols_stat, k)) for k in list(self.dv_iv_map.keys())] )
 
   def get_normalized_sensitivity(self):
     return self._normalized_sensitivity
@@ -276,7 +276,7 @@ class LinearRegressionSM(LinearRegression):
     ''' return max residuals '''
     try: 
       _residue = self.get_statistics()['residuals']
-      return dict([(r,max(abs(_residue[r]))) for r in _residue.keys()])
+      return dict([(r,max(abs(_residue[r]))) for r in list(_residue.keys())])
     except:
       return None
 
@@ -290,7 +290,7 @@ class LinearRegressionSM(LinearRegression):
     ''' return rms residuals '''
     try: 
       _residue = self.get_statistics()['residuals']
-      return dict([(r,np.std(_residue[r])) for r in _residue.keys()])
+      return dict([(r,np.std(_residue[r])) for r in list(_residue.keys())])
     except:
       return None
 
@@ -308,7 +308,7 @@ class LinearRegressionSM(LinearRegression):
       Check confidence intervals and remove any predictor embraces 0.0 in the interval because it is insignificant contributor
     '''
     _dv_iv = self.get_predictors()
-    for k in _dv_iv.keys():
+    for k in list(_dv_iv.keys()):
       _confint = self.get_statistics()['confidence_interval'][k]
       remove_items = []
       for idx,p in enumerate(_dv_iv[k]):
@@ -332,7 +332,7 @@ class LinearRegressionSM(LinearRegression):
 
   def get_summary(self):
     ''' get model summary of statsmodels OLS '''
-    return dict([(k,self.short_summary(v.summary())) for k,v in getattr(self,'model_ols').items()])
+    return dict([(k,self.short_summary(v.summary())) for k,v in list(getattr(self,'model_ols').items())])
 
   def short_summary(self, summary, short=True):
     ''' rip off unnecessary report '''
@@ -348,13 +348,13 @@ class LinearRegressionSM(LinearRegression):
   def get_predicted_response(self):
     ''' get predicted response from the extracted models '''
     mdl = getattr(self, 'model_ols')
-    return dict([ (k, v.predict()) for k,v in mdl.items() ])
+    return dict([ (k, v.predict()) for k,v in list(mdl.items()) ])
 
   def print_model_summary(self):
     ''' I made this function because printing model_summary is too verbose '''
     model=getattr(self,'model_ols')
     try:
-      for mdl in model.values():
+      for mdl in list(model.values()):
         self._logger.info('\n')
         self._logger.info(self.short_summary(mdl.summary()))
     except:
@@ -364,7 +364,7 @@ class LinearRegressionSM(LinearRegression):
     ''' print formula from linear regression '''
     model=getattr(self,'model_ols')
     try:
-      for mdl in model.values():
+      for mdl in list(model.values()):
         if not quite:
           self._logger.info(self._build_formula_from_lr(mdl))
         else:
@@ -378,14 +378,14 @@ class LinearRegressionSM(LinearRegression):
   def get_lr_formulas(self):
     try:
       model=getattr(self,'model_ols')
-      return [self._build_formula_from_lr(mdl) for mdl in model.values()]
+      return [self._build_formula_from_lr(mdl) for mdl in list(model.values())]
     except:
       return None
 
   def _build_formula_from_lr(self, model):
     ''' build a linear equation from linear regression result '''
     dv = model.model.formula.split('~')[0]
-    pv = model.params.keys()
+    pv = list(model.params.keys())
     pv_expanded = list(set(flatten_list([s.split(':') for s in pv]))) # list of expanded predictors
     qa_expanded = [s for k in self.quantizedport_name for s in pv_expanded if re.match(k+'_\d$', s)] # find terms quantized analog
     coef = model.params.values
@@ -438,18 +438,18 @@ class LinearRegressionSM(LinearRegression):
         model = {} # key: dep. var, value : regression model instance
         predictors = {} # key: dep. var, value: list of variables in the formula
     '''
-    df = pd.DataFrame(dict(self.iv.items()+self.dv.items())) # data frame in pandas
-    model = dict([ (dv, sm.ols(formula='%s ~ %s' %(dv, formula[dv]), data=df).fit()) for dv in self.dv_iv_map.keys() ])
-    predictors = dict([ (dv, list(model[dv].params.keys())) for dv in self.dv_iv_map.keys() ])
-    exog  = dict([ (dv, model[dv].model.data.orig_exog) for dv in self.dv_iv_map.keys() ])
-    endog = dict([ (dv, model[dv].model.data.orig_endog) for dv in self.dv_iv_map.keys() ])
-    xnames = dict([ (dv, model[dv].model.data.xnames) for dv in self.dv_iv_map.keys() ])
+    df = pd.DataFrame(dict(list(self.iv.items())+list(self.dv.items()))) # data frame in pandas
+    model = dict([ (dv, sm.ols(formula='%s ~ %s' %(dv, formula[dv]), data=df).fit()) for dv in list(self.dv_iv_map.keys()) ])
+    predictors = dict([ (dv, list(model[dv].params.keys())) for dv in list(self.dv_iv_map.keys()) ])
+    exog  = dict([ (dv, model[dv].model.data.orig_exog) for dv in list(self.dv_iv_map.keys()) ])
+    endog = dict([ (dv, model[dv].model.data.orig_endog) for dv in list(self.dv_iv_map.keys()) ])
+    xnames = dict([ (dv, model[dv].model.data.xnames) for dv in list(self.dv_iv_map.keys()) ])
     return predictors, model, df, exog, endog, xnames
 
   def _build_statistics(self, model):
     ''' returns statistical inference of regression models '''
-    stat = dict([ (p, dict([ (x, fn(y)) for x, y in model.items() ])) for p, fn in self.stat_func.items() ])
-    stat.update( dict([ (i, dict([(x, fn(stat['coefficient'][x])) for x in model.keys()])) for i, fn in self.stat_coef_func.items() ]) )
+    stat = dict([ (p, dict([ (x, fn(y)) for x, y in list(model.items()) ])) for p, fn in list(self.stat_func.items()) ])
+    stat.update( dict([ (i, dict([(x, fn(stat['coefficient'][x])) for x in list(model.keys())])) for i, fn in list(self.stat_coef_func.items()) ]) )
     return stat
 
   def get_combinations(self, predictors, iv_key):
@@ -463,7 +463,7 @@ class LinearRegressionSM(LinearRegression):
     '''
     comb = []
     intercept = [self.get_intercept_name()]
-    _pvar = predictors[predictors.keys()[0]]
+    _pvar = predictors[list(predictors.keys())[0]]
     for i in range(len(iv_key)-1):
       for subset in combinations(iv_key, i):
         qa_in_subset = [k for s in subset for k in self.quantizedport_name if re.match(k+'_\d$', s)]

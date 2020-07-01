@@ -69,7 +69,7 @@ class WireCrossReference(object):
 
   def _assert_default(self, cfg, filename):
     ''' assert if default wire type exists '''
-    assert self.DEF_WIRE_KEY in cfg.keys(), mcode.ERR_019 % (self.DEF_WIRE_KEY, filename)
+    assert self.DEF_WIRE_KEY in list(cfg.keys()), mcode.ERR_019 % (self.DEF_WIRE_KEY, filename)
 
   def _extract_info(self, cfg):
     ''' extract wire cross-reference info '''
@@ -87,6 +87,6 @@ class WireCrossReference(object):
 
   def _extract_all_wiretype(self, cfg):
     ''' extract all wire types '''
-    _wiretypes = list(set(flatten_list([v.values() for k,v in self._map.items()])))
+    _wiretypes = list(set(flatten_list([list(v.values()) for k,v in list(self._map.items())])))
     return list(set(merge_list(_wiretypes, [self._default])))
 #---------------------------

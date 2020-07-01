@@ -91,4 +91,4 @@ def get_established_foreign_ip_address(port=5000):
 if __name__ == '__main__':
   for conn in netstat():
     if conn[3].endswith(':5000'):
-      print conn
+      print(conn)

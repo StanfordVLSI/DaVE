@@ -89,7 +89,7 @@ class Interface(object):
     self.testspecs = testspecs    # test port specification section
 
     self.generic_pin_names = sorted([p.generic_name for p in self.pins])
-    self.generic_pin_names_optional = sorted([p.generic_name for p in filter(lambda x: x.is_optional, self.pins)])
+    self.generic_pin_names_optional = sorted([p.generic_name for p in [x for x in self.pins if x.is_optional]])
 
 
   @classmethod
@@ -107,7 +107,7 @@ class Interface(object):
     prop = read_yaml(filename, defaults)
 
     def build_section(cls_name, dct): 
-      return [cls_name.from_dict(name,val) for name, val in dct.items()] if dct != None else []
+      return [cls_name.from_dict(name,val) for name, val in list(dct.items())] if dct != None else []
 
     return cls(
             prop[cls.key_tname], 
@@ -201,7 +201,7 @@ class Pin(object):
     return self.generic_name
 
   def get_properties(self): # properties 
-    return self.to_dict().values()[0]
+    return list(self.to_dict().values())[0]
             
 
 #--------------------------------------------
@@ -229,7 +229,7 @@ class Metric(object):
     return self.name
 
   def get_properties(self):
-    return self.to_dict().values()[0]
+    return list(self.to_dict().values())[0]
 
 
 #--------------------------------------------
@@ -262,7 +262,7 @@ class ModelParam(object):
     return self.name
 
   def get_properties(self):
-    return self.to_dict().values()[0]
+    return list(self.to_dict().values())[0]
 
 
 #--------------------------------------------
@@ -286,7 +286,7 @@ class TestParam(object):
     return self.name
 
   def get_properties(self):
-    return self.to_dict().values()[0]
+    return list(self.to_dict().values())[0]
 
 
 #--------------------------------------------
@@ -308,8 +308,8 @@ class TestSpec(object):
 def main():
   m =  Metric.from_dict({'name': 'max_swing', 'description': 'max voltage swing', 'minval': 0.1, 'maxval': 1.1, 'abstol': 0.001})
   x = Interface.load('/home/bclim/proj/DaVEnv/mGenero/samples/template/cteq/cteq.interface')
-  print vars(x)
-  print x.get_generic_pin_optional()
+  print(vars(x))
+  print(x.get_generic_pin_optional())
 
 if __name__ == "__main__":
   main()

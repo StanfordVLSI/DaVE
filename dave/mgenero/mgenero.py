@@ -105,13 +105,13 @@ class ModelCreator(object):
     cfg_A = TestConfig(filename_A, bypass=True, keep_raw=True, quite=True).get_config()
     cfg_B = TestConfig(filename_B, bypass=True, keep_raw=True, quite=True).get_config()
     n_err = 0
-    for _t in cfg_B.keys(): # for each test
-      if _t not in cfg_A.keys(): # invalid test in test specification
+    for _t in list(cfg_B.keys()): # for each test
+      if _t not in list(cfg_A.keys()): # invalid test in test specification
         self._logger.info( "[INFO-TESTSPEC] Test named %s in test spec does't exist in the generated test file. The corresponding test spec will be ignored." % _t )
         continue
       else:
-        for _p in cfg_B[_t]['port'].keys(): # each port name in B
-          if _p not in cfg_A[_t]['port'].keys(): # invalid port name
+        for _p in list(cfg_B[_t]['port'].keys()): # each port name in B
+          if _p not in list(cfg_A[_t]['port'].keys()): # invalid port name
             cfg_B[_t]['port'].pop(_p) # remove the port
             self._logger.info( "[INFO-TESTSPEC] The port %s in a test named %s (test spec) does't exist in the generated test file. The corresponding test spec will be ignored." % (_p, _t) )
 

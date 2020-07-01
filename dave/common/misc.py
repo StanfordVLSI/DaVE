@@ -230,7 +230,7 @@ def interpolate_env(value, logger=None):
       if logger:
         logger.warn(msg)
       else:
-        print msg
+        print(msg)
   return newvalue
 
 def eval_str(value, dtype=int):
@@ -293,17 +293,17 @@ def print_section(msg, level=1, leading_newline=True):
   nc = len(msg)
   newline = '\n' if leading_newline else None
   if level==1:
-    return filter(None, [newline, '='*nc, msg, '='*nc])
+    return [_f for _f in [newline, '='*nc, msg, '='*nc] if _f]
   elif level==2:
-    return filter(None, [newline, msg, '*'*nc])
+    return [_f for _f in [newline, msg, '*'*nc] if _f]
   elif level==3:
-    return filter(None, [newline, msg, '-'*nc])
+    return [_f for _f in [newline, msg, '-'*nc] if _f]
   else:
-    return filter(None, [newline, msg, '^'*nc])
+    return [_f for _f in [newline, msg, '^'*nc] if _f]
 
 def print_end_msg(msg, char='=', leading_newline=True):
   newline = '\n' if leading_newline else None
-  return filter(None, [newline, '%s %s %s' %(char, msg, char)])
+  return [_f for _f in [newline, '%s %s %s' %(char, msg, char)] if _f]
 
 
 def get_letter_index(index, upper=False):
@@ -371,7 +371,7 @@ def read_yaml(filename,default={}):
   val.update(default)
   f = get_abspath(filename)
   val.update(yaml.load(open(f,'r')))
-  for k in default.keys():
+  for k in list(default.keys()):
     if not val[k]: val.update({k:default[k]})
   return val
 

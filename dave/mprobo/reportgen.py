@@ -4,10 +4,10 @@ import numpy as np
 import copy
 import operator
 from dave.common.misc import to_engr, add_column_list, get_absmax, get_letter_index
-import linearregression as lr
-import htmlamschk as ht
+from . import linearregression as lr
+from . import htmlamschk as ht
 from dave.common.davelogger import DaVELogger
-from environ import EnvTestcfgPort, EnvSimcfg, EnvPortName
+from .environ import EnvTestcfgPort, EnvSimcfg, EnvPortName
 from dave.mprobo.checker import UnitChecker
 
 # color code 
@@ -175,8 +175,8 @@ class ReportGenerator(object):
     self._result_accurate_init   = chkr.run(lrg, lrr, self._ph, False)
     self._result_accurate_suggested = chkr.run(lrg_sgt, lrr_sgt, self._ph, True)
 
-    self._err_flag_pin = dict([ (k, v['err_flag_pin']) for k,v in self._result_simple_suggested.items() ])
-    self._err_flag_residual = dict([ (k, v['err_flag_residue']) for k,v in self._result_accurate_suggested.items() ])
+    self._err_flag_pin = dict([ (k, v['err_flag_pin']) for k,v in list(self._result_simple_suggested.items()) ])
+    self._err_flag_residual = dict([ (k, v['err_flag_residue']) for k,v in list(self._result_accurate_suggested.items()) ])
 
   def is_pin_error(self):
     return self._err_flag_pin

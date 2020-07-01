@@ -2,7 +2,7 @@ __doc__ = '''
 empy template for a testbench
 '''
 
-from StringIO import StringIO
+from io import StringIO
 
 
 tb_template = StringIO("""

@@ -10,14 +10,14 @@ import numpy as np
 import os
 from BitVector import BitVector
 import copy
-from itertools import product, ifilter, ifilterfalse
+from itertools import product, filterfalse
 import pandas as pd
 import random
 from dave.common.davelogger import DaVELogger
 from dave.common.misc import print_section, all_therm, dec2bin, bin2dec, bin2thermdec, flatten_list, assert_file, isNone
-from environ import EnvOaTable, EnvFileLoc, EnvTestcfgPort
-from port import get_singlebit_name
-import oatable
+from .environ import EnvOaTable, EnvFileLoc, EnvTestcfgPort
+from .port import get_singlebit_name
+from . import oatable
 import pyDOE
 import dave.mprobo.mchkmsg as mcode
 
@@ -121,7 +121,7 @@ class TestVectorGenerator(object):
                    'en_interact': test_cfg.get_option_regression_en_interact(),
                    'order': int(test_cfg.get_option_regression_order()) }
 
-    map(self._logger.info, print_section(mcode.INFO_036, 2)) # print section header
+    list(map(self._logger.info, print_section(mcode.INFO_036, 2))) # print section header
 
     # all possible linear circuit configurations by DigitalModePort
     self._generate_digital_vector(ph.get_digital_input()) 
@@ -227,18 +227,18 @@ class TestVectorGenerator(object):
     csv_d = os.path.join(workdir, EnvFileLoc().csv_vector_prefix+'_digital.csv') # for digital 
     csv_a = os.path.join(workdir, EnvFileLoc().csv_vector_prefix+'_analog.csv')  # for analog
 
-    d_vector = dict([ (k, self.conv_tobin(ph, k, v)) for k, v in self._d_vector.items() ])
-    a_vector = dict([ (k, self.conv_tobin(ph, k, v)) for k, v in self._a_vector.items() ])
+    d_vector = dict([ (k, self.conv_tobin(ph, k, v)) for k, v in list(self._d_vector.items()) ])
+    a_vector = dict([ (k, self.conv_tobin(ph, k, v)) for k, v in list(self._a_vector.items()) ])
 
     df_d = pd.DataFrame(d_vector)
     df_a = pd.DataFrame(a_vector)
 
-    map(self._logger.info, print_section(mcode.INFO_040, 3))
+    list(map(self._logger.info, print_section(mcode.INFO_040, 3)))
     self._logger.info(df_d)
     self._logger.debug('\n' + mcode.DEBUG_004 % os.path.relpath(csv_d))
     df_d.to_csv(csv_d)
 
-    map(self._logger.info, print_section(mcode.INFO_041, 3))
+    list(map(self._logger.info, print_section(mcode.INFO_041, 3)))
     self._logger.info(df_a)
     self._logger.debug('\n' + mcode.DEBUG_005 % os.path.relpath(csv_a))
     df_a.to_csv(csv_a)
@@ -255,10 +255,10 @@ class TestVectorGenerator(object):
     self._logger.debug(' - %s' % csv_a)
 
     df = pd.read_csv(csv_a)
-    self._a_vector = dict([ (k, self.conv_frombin(ph, k, df[k])) for k in df.keys() if k in flatten_list(ph.get_name().values()) ])
+    self._a_vector = dict([ (k, self.conv_frombin(ph, k, df[k])) for k in list(df.keys()) if k in flatten_list(list(ph.get_name().values())) ])
 
     df = pd.read_csv(csv_d)
-    self._d_vector = dict([ (k, self.conv_frombin(ph, k, df[k])) for k in df.keys() if k in flatten_list(ph.get_name().values()) ])
+    self._d_vector = dict([ (k, self.conv_frombin(ph, k, df[k])) for k in list(df.keys()) if k in flatten_list(list(ph.get_name().values())) ])
     
   def get_analog_vector_length(self): # get # of analog vectors 
     return self._get_vector_length(self._a_vector)
@@ -314,16 +314,16 @@ class TestVectorGenerator(object):
         #TODO: only thermometer/binary code are supported now
     '''
     vector_out = copy.deepcopy(vector)
-    for p in vector.keys():
+    for p in list(vector.keys()):
       if p in ph.get_quantized_port_name():
         v = ph.get_by_name(p)
         if v.encode == EnvTestcfgPort().thermometer:
-          vector_out[p] = map(lambda k: bin2thermdec(dec2bin(k, v.bit_width)), vector_out[p])
+          vector_out[p] = [bin2thermdec(dec2bin(k, v.bit_width)) for k in vector_out[p]]
     return vector_out
 
   @classmethod
   def remove_pinned_input(cls, vector, ph): # remove test vectors of pinned input ports 
-    return dict([ (k, v) for k, v in vector.items() if not ph.get_by_name(k).is_pinned])
+    return dict([ (k, v) for k, v in list(vector.items()) if not ph.get_by_name(k).is_pinned])
 
   @classmethod
   def expand_quantized_vector(cls, vector, ph):
@@ -331,7 +331,7 @@ class TestVectorGenerator(object):
     vector_new = copy.deepcopy(vector)
     qa = ph.get_unpinned_quantized_port_name()
 
-    for p in filter(lambda x, qa=qa: x in qa, vector_new.keys()):
+    for p in filter(lambda x, qa=qa: x in qa, list(vector_new.keys())):
       vector_p = vector_new[p]
       del vector_new[p]
       bitw = ph.get_by_name(p).bit_width
@@ -348,16 +348,16 @@ class TestVectorGenerator(object):
     return cls.expand_quantized_vector(_vector, ph) 
 
   def _get_vector_length(self, test_vector): # return the vector length 
-    return len(test_vector[test_vector.keys()[0]])
+    return len(test_vector[list(test_vector.keys())[0]])
 
   def _get_vector(self, index, analog=True): # get a vector with index 
     vectors = self._a_vector if analog else self._d_vector
     assert index < self._get_vector_length(vectors), mcode.ERR_007
-    return dict([(p,v[index]) for p,v in vectors.items()])
+    return dict([(p,v[index]) for p,v in list(vectors.items())])
 
   def _get_max_bitwidth(self, qport):
     ''' return the max bit-width among digtal inputs (for quantized port) '''
-    return max(map(lambda x: x.bit_width, qport)) if len(qport) > 0 else 0
+    return max([x.bit_width for x in qport]) if len(qport) > 0 else 0
 
   def _generate_analog_raw_vector(self):
     ''' generate analog raw vector 
@@ -398,7 +398,7 @@ class TestVectorGenerator(object):
     ''' return all possible digital modes from DigitalModePort information.  '''
     order   = [p.name for p in dport]
     allowed = [tuple(p.allowed) for p in dport]
-    vector_product = zip(*list(product(*allowed))) # cross product and transpose
+    vector_product = list(zip(*list(product(*allowed)))) # cross product and transpose
     self._d_vector = dict([(k,list(vector_product[i])) for i, k in enumerate(order)])
 
   def _map_analog_vector(self, raw_vector): # scale raw vector to real analog range
@@ -432,7 +432,7 @@ class TestVectorGenerator(object):
     base_vector = list(all_therm(bitw)) # toggle each bit once
     self._logger.debug(mcode.DEBUG_006 % str(base_vector))
 
-    vector = np.array(filter(lambda x: x in allowed, base_vector)) # allowed base vector
+    vector = np.array([x for x in base_vector if x in allowed]) # allowed base vector
     allowed_ex_vector = list(set(allowed)-set(vector)) # allowed except "vector"
 
     # find which bits are not toggling and add one among allowed codes
@@ -451,7 +451,7 @@ class TestVectorGenerator(object):
     n_remain = vlen-len(vector)
     if n_remain > 0:
       # modulo by len(allowed) because n_remain could be larger than size of allowed
-      random_idx = np.array(random.sample(range(n_remain), n_remain)) % len(allowed)
+      random_idx = np.array(random.sample(list(range(n_remain)), n_remain)) % len(allowed)
       vector = np.concatenate((vector, allowed[random_idx]))
     np.random.shuffle(vector)
     return vector

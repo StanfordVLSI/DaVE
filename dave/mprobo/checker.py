@@ -100,8 +100,8 @@ class UnitChecker(object):
       gain_err = [self._get_rel_error(gain_g[i],gain_r[i]) for i in range(len(gain_g))] # gain error
 
       # normalized sensitivity of predictors
-      s_g = map(self._format_s, self.lrg.get_normalized_sensitivity()[dv])
-      s_r = map(self._format_s, self.lrr.get_normalized_sensitivity()[dv])
+      s_g = list(map(self._format_s, self.lrg.get_normalized_sensitivity()[dv]))
+      s_r = list(map(self._format_s, self.lrr.get_normalized_sensitivity()[dv]))
 
       # max and stdvar of residual errors
       max_res_g = get_absmax(self.residue_g2g[dv])
@@ -228,10 +228,10 @@ class UnitChecker(object):
       sim_r = self.lrr.get_response() 
 
       # calculate residues
-      residue_g2g = dict([(k,v-sim_g[k]) for k,v in est_g.items()])
-      residue_r2r = dict([(k,v-sim_r[k]) for k,v in est_r.items()])
-      residue_g2r = dict([(k,v-sim_r[k]) for k,v in est_g.items()])
-      residue_r2g = dict([(k,v-sim_g[k]) for k,v in est_r.items()])
+      residue_g2g = dict([(k,v-sim_g[k]) for k,v in list(est_g.items())])
+      residue_r2r = dict([(k,v-sim_r[k]) for k,v in list(est_r.items())])
+      residue_g2r = dict([(k,v-sim_r[k]) for k,v in list(est_g.items())])
+      residue_r2g = dict([(k,v-sim_g[k]) for k,v in list(est_r.items())])
 
     except: # don't remember which creates an error
       residue_g2g = None

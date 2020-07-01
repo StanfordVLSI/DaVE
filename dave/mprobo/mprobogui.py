@@ -5,8 +5,8 @@
 ###############################################
 
 import os
-import Tkinter as Tk
-import tkFileDialog
+import tkinter as Tk
+import tkinter.filedialog
 import Pmw
 import unicodedata
 import copy
@@ -91,7 +91,7 @@ class LabeledRealCounter(Pmw.Counter):
     kw['entryfield_validate'] = default_validate
     kw['entryfield_value'] = 50.0
     kw['labelpos'] = 'w'
-    apply(Pmw.Counter.__init__, (self, parent), kw)
+    Pmw.Counter.__init__(*(self, parent), **kw)
 
   def getvalue(self):
     return Pmw.Counter.getvalue(self)
@@ -111,7 +111,7 @@ class LabeledIntCounter(Pmw.Counter):
     kw['labelpos'] = 'w'
     kw['entry_width'] = 3
     kw['sticky'] = 'e'
-    apply(Pmw.Counter.__init__, (self, parent), kw)
+    Pmw.Counter.__init__(*(self, parent), **kw)
 
   def getvalue(self):
     return Pmw.Counter.getvalue(self)
@@ -208,7 +208,7 @@ class FileEntry:
 
   def _browseFilename(self):
     ''' browse a filename '''
-    return tkFileDialog.askopenfilename(filetypes=self._file_ext, parent=self._parent)
+    return tkinter.filedialog.askopenfilename(filetypes=self._file_ext, parent=self._parent)
 
 
 #----------------------------------------------
@@ -228,7 +228,7 @@ class PortEditor:
 
   def set(self, value):
     ''' import data '''
-    for k, v in value.items():
+    for k, v in list(value.items()):
       ptype = v['port_type']
       self._data[k] = (v['port_type'], 
                        v['description'],
@@ -250,7 +250,7 @@ class PortEditor:
   def get(self):
     ''' export data '''
     data = {}
-    for k,v in self._data.items():
+    for k,v in list(self._data.items()):
       _tmp = { 'port_type': v[0],
                'description': v[1],
                'regions': v[2].split(',') if v[2] != '' else None,
@@ -262,7 +262,7 @@ class PortEditor:
                'pinned': v[8],
                'default_value': v[9]
              }
-      data[k] = dict([(k1,v1) for k1,v1 in _tmp.items() if v1 != None])
+      data[k] = dict([(k1,v1) for k1,v1 in list(_tmp.items()) if v1 != None])
 
     return data
 
@@ -351,7 +351,7 @@ class PortEditor:
 
   def _name_callback(self, text):
     ''' callback routine of combobox '''
-    if text in self._data.keys():
+    if text in list(self._data.keys()):
       self._type.setvalue(self._data[text][0])
       self._description.setvalue(self._data[text][1])
       self._regions.setvalue(self._data[text][2])
@@ -394,7 +394,7 @@ class PortEditor:
 
   def _deleteport(self):
     key = self._name.get()
-    if key in self._data.keys():
+    if key in list(self._data.keys()):
       del self._data[key]
       self.update_display()
     else:
@@ -557,7 +557,7 @@ class GridEdit2D:
 
   def _cbox_callback(self, text):
     ''' callback routine of combobox '''
-    if text in self._data.keys():
+    if text in list(self._data.keys()):
       self._entry.set(self._data[text])
 
   def _change_sctxt_state(self, state):
@@ -578,7 +578,7 @@ class GridEdit2D:
   def _deleteitem(self):
     ''' delete an item '''
     key = self._cbox.get()
-    if key in self._data.keys():
+    if key in list(self._data.keys()):
       del self._data[key]
       self.update_display()
     else:
@@ -639,11 +639,11 @@ class Startup:
     self.buttonBox.invoke()
 
   def _start_testcfg(self):
-    print 'Starting Test Configuration Editor'
+    print('Starting Test Configuration Editor')
     TestConfigurationEditor(self._parent)
 
   def _start_simcfg(self):
-    print 'Starting Simulator Configuration Editor'
+    print('Starting Simulator Configuration Editor')
     SimulatorConfigurationEditor(self._parent)
 
 
@@ -843,10 +843,10 @@ class TestConfigurationEditor:
       self._set_title(self._title+' - '+filename)
 
   def _browseFilename(self):
-    return tkFileDialog.askopenfilename(filetypes=[('mchecker configuration file', '*.cfg'),('All files', '*.*')], parent=self._top)
+    return tkinter.filedialog.askopenfilename(filetypes=[('mchecker configuration file', '*.cfg'),('All files', '*.*')], parent=self._top)
 
   def _browsesaveFilename(self):
-    return tkFileDialog.asksaveasfilename(filetypes=[('mchecker configuration file', '*.cfg'),('All files', '*.*')], parent=self._top)
+    return tkinter.filedialog.asksaveasfilename(filetypes=[('mchecker configuration file', '*.cfg'),('All files', '*.*')], parent=self._top)
 
 
 #----------------------------------------------
@@ -879,7 +879,7 @@ class TestConfigurationSection:
     dummy_grp2.grid(row=0, column=1, sticky='WENS')
 
   def get(self):
-    return dict(self._header.get().items() + {'port':self._port.get()}.items() + {'regression':self._regression.get()}.items() + {'testbench':self._testbench.get()}.items())
+    return dict(list(self._header.get().items()) + list({'port':self._port.get()}.items()) + list({'regression':self._regression.get()}.items()) + list({'testbench':self._testbench.get()}.items()))
 
   def set(self, value):
     self._header.set(
@@ -1069,12 +1069,12 @@ class TestTestbenchTab:
   def get(self):
     initgolden = unicode2ascii(self._initgolden).split('\n')
     golden = {}
-    for x in filter(lambda x: x != '', initgolden):
+    for x in [x for x in initgolden if x != '']:
       field = x.split('=')
       golden[field[0]] = field[1]
     initrevised = unicode2ascii(self._initrevised).split('\n')
     revised = {}
-    for x in filter(lambda x: x != '', initrevised):
+    for x in [x for x in initrevised if x != '']:
       field = x.split('=')
       revised[field[0]] = field[1]
 
@@ -1083,9 +1083,9 @@ class TestTestbenchTab:
     out['pre_module_declaration'] = unicode2ascii(self._premodule).rstrip('\n')
     out['tb_code'] = unicode2ascii(self._customcode).rstrip('\n')
     out['initial_condition']={'golden':golden, 'revised':revised}
-    out['wire'] = dict([ (k, v.split(',')) for k,v in self._wire.get().items() if v != ''])
+    out['wire'] = dict([ (k, v.split(',')) for k,v in list(self._wire.get().items()) if v != ''])
     out['post-processor'] = {
-                            'script_files': filter(lambda x: x!='', self._scriptfile.get().split(',')),
+                            'script_files': [x for x in self._scriptfile.get().split(',') if x!=''],
                             'command': self._pp_cmd.getvalue()
                             }
 
@@ -1093,9 +1093,9 @@ class TestTestbenchTab:
 
 
   def set(self, value):
-    initgolden = ['%s=%s' %(k,v) for k,v in value['initial_condition']['golden'].items()]
-    initrevised = ['%s=%s' %(k,v) for k,v in value['initial_condition']['revised'].items()]
-    _wire = dict([ (k, ', '.join(v)) for k,v in value['wire'].items()])
+    initgolden = ['%s=%s' %(k,v) for k,v in list(value['initial_condition']['golden'].items())]
+    initrevised = ['%s=%s' %(k,v) for k,v in list(value['initial_condition']['revised'].items())]
+    _wire = dict([ (k, ', '.join(v)) for k,v in list(value['wire'].items())])
 
     self._temperature.setvalue(value['temperature'])
     self._premodule.insert('1.0', value['pre_module_declaration'].lstrip('\n'))
@@ -1270,10 +1270,10 @@ class SimulatorConfigurationEditor:
       self._set_title(self._title+' - '+filename)
 
   def _browseFilename(self):
-    return tkFileDialog.askopenfilename(filetypes=[('mchecker configuration file', '*.cfg'),('All files', '*.*')], parent=self._top)
+    return tkinter.filedialog.askopenfilename(filetypes=[('mchecker configuration file', '*.cfg'),('All files', '*.*')], parent=self._top)
 
   def _browsesaveFilename(self):
-    return tkFileDialog.asksaveasfilename(filetypes=[('mchecker configuration file', '*.cfg'),('All files', '*.*')], parent=self._top)
+    return tkinter.filedialog.asksaveasfilename(filetypes=[('mchecker configuration file', '*.cfg'),('All files', '*.*')], parent=self._top)
 
 
 #----------------------------------------------
@@ -1460,8 +1460,8 @@ class SimulatorConfigSection:
         self._amsconnrules.configure(entry_state='normal')
         self.circuit.change_state('normal')
         return True
-    except Exception, e:
-      print e
+    except Exception as e:
+      print(e)
       return False
     
 

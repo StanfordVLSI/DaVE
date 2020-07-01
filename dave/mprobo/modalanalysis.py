@@ -21,11 +21,11 @@ class ModalAnalysis(object):
     for N in range(2,self.N_degree):
       ls_result = self.leastsquare_complexexponential(h,t,N)
       rho = self.compare_impulseresponse(ls_result['h_impulse'],ls_result['h_estimated'])
-      print 'rho=',rho
+      print('rho=',rho)
       if rho > self.rho_threshold:
         break
       if N == self.N_degree:
-        print '[WARNING]: Maximum degree of freedom is reached when fitting response to transfer function'
+        print('[WARNING]: Maximum degree of freedom is reached when fitting response to transfer function')
     return ls_result
 
   def compare_impulseresponse(self,h1,h2):
@@ -59,7 +59,7 @@ class ModalAnalysis(object):
     Z = pinv(matrix(Q.transpose()))*matrix(h)
     # return values
     num,den = invres(Z.getA1(),P.getA1(),zeros(size(P)),tol=1e-4,rtype='avg')
-    print num, den
+    print(num, den)
     num = num.real
     den = den.real
     h_estimated = Q.transpose()*Z

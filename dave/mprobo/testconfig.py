@@ -1,7 +1,7 @@
 
 import sys
 from configobj import ConfigObj
-from configobjwrapper import ConfigObjWrapper
+from .configobjwrapper import ConfigObjWrapper
 import copy
 from dave.common.misc import from_engr, eval_str, flatten_list, generate_random_str, get_abspath, all_therm, all_bin, all_gray, all_onehot, featureinfo, interpolate_env, print_section
 import os
@@ -9,8 +9,8 @@ import collections
 from BitVector import BitVector
 from collections import OrderedDict
 from itertools import product
-from amschkschema import SchemaTestConfig 
-from environ import EnvPortName, EnvTestcfgPort, EnvTestcfgSection, EnvTestcfgOption, EnvTestcfgTestbench, EnvTestcfgSimTime, EnvSimcfg, EnvFileLoc
+from .amschkschema import SchemaTestConfig 
+from .environ import EnvPortName, EnvTestcfgPort, EnvTestcfgSection, EnvTestcfgOption, EnvTestcfgTestbench, EnvTestcfgSimTime, EnvSimcfg, EnvFileLoc
 from dave.common.davelogger import DaVELogger
 import dave.mprobo.mchkmsg as mcode
 from dave.mprobo.wire import TestBenchWire
@@ -38,7 +38,7 @@ class TestConfig(object):
     self._logger = DaVELogger.get_logger('%s.%s.%s' % (logger_id, __name__, self.__class__.__name__))
     self._logger_id = logger_id
     if not quite:
-      map(self._logger.info, print_section('Compile test configrations', 1))
+      list(map(self._logger.info, print_section('Compile test configrations', 1)))
 
     if keep_raw:
       self.config = self._read_raw_config_file(cfg_filename)
@@ -74,30 +74,30 @@ class TestConfig(object):
     # instantiate config class for each class
     if not bypass:
       self._create_subtest()
-    for k,v in self.config.items():
+    for k,v in list(self.config.items()):
       self._test_name_list.append(k)
       self._test_cfg[k]=UnitTestConfig(k, v, self._pxref, self._logger_id)
   
   def _create_subtest(self):
     ''' generate subtests for piecewise linear testing of analog inputs '''
-    for tn, tv in self.config.items(): # for each test
+    for tn, tv in list(self.config.items()): # for each test
       _tmp_multi_region = dict([(pn, sorted(map(float,pc[self._tenvt.regions]))) 
-                          for pn, pc in tv[self._tenvs.port].items() 
-                          if self._tenvt.regions in pc.keys() and 
+                          for pn, pc in list(tv[self._tenvs.port].items()) 
+                          if self._tenvt.regions in list(pc.keys()) and 
                              pc[self._tenvt.pinned]==False and 
                              pc[self._tenvt.port_type]==self._tenvp.AnalogInput]
                           )
 
-      _tmp_multi_region = OrderedDict(sorted(_tmp_multi_region.items(),key=lambda t:t[0]))
+      _tmp_multi_region = OrderedDict(sorted(list(_tmp_multi_region.items()),key=lambda t:t[0]))
 
       _tmp_uniq_region = dict([(pn,sorted(map(float,pc[self._tenvt.regions]))) 
-                         for pn,pc in tv[self._tenvs.port].items()
-                         if pn not in _tmp_multi_region.keys() and
-                            self._tenvt.regions in pc.keys() ]
+                         for pn,pc in list(tv[self._tenvs.port].items())
+                         if pn not in list(_tmp_multi_region.keys()) and
+                            self._tenvt.regions in list(pc.keys()) ]
                          )
 
-      _subdiv = list(product(*[range(len(x)-1) for x in _tmp_multi_region.values()]))
-      _subdiv_key = _tmp_multi_region.keys() # port names to be subdivded
+      _subdiv = list(product(*[list(range(len(x)-1)) for x in list(_tmp_multi_region.values())]))
+      _subdiv_key = list(_tmp_multi_region.keys()) # port names to be subdivded
       no_subtest = len(_subdiv)
       if no_subtest > 0: # if there really exists sub regions
         if no_subtest > 1:
@@ -108,7 +108,7 @@ class TestConfig(object):
             _tmp_cfg[self._tenvs.port][_subdiv_key[y]][self._tenvt.upper_bound] = _tmp_multi_region[_subdiv_key[y]][x[y]+1]
             _tmp_cfg[self._tenvs.port][_subdiv_key[y]][self._tenvt.lower_bound] = _tmp_multi_region[_subdiv_key[y]][x[y]]
             del _tmp_cfg[self._tenvs.port][_subdiv_key[y]][self._tenvt.regions]
-          for k,v in _tmp_uniq_region.items():
+          for k,v in list(_tmp_uniq_region.items()):
             _tmp_cfg[self._tenvs.port][k][self._tenvt.upper_bound] = v[1]
             _tmp_cfg[self._tenvs.port][k][self._tenvt.lower_bound] = v[0]
             del _tmp_cfg[self._tenvs.port][k][self._tenvt.regions]
@@ -118,9 +118,9 @@ class TestConfig(object):
         if no_subtest > 1:
           del self.config[tn] # delete original, undivided test
 
-    for tn, tv in self.config.items(): # check analog output port has region
-      for pn, pc in tv[self._tenvs.port].items():
-        if self._tenvt.regions in pc.keys() and pc[self._tenvt.port_type]==self._tenvp.AnalogOutput:
+    for tn, tv in list(self.config.items()): # check analog output port has region
+      for pn, pc in list(tv[self._tenvs.port].items()):
+        if self._tenvt.regions in list(pc.keys()) and pc[self._tenvt.port_type]==self._tenvp.AnalogOutput:
           val = sorted(map(float, pc[self._tenvt.regions]))
           pc[self._tenvt.upper_bound] = val[1]
           pc[self._tenvt.lower_bound] = val[0]
@@ -165,7 +165,7 @@ class UnitTestConfig(object):
 
     self._logger.info(mcode.INFO_055 % test_name)
 
-    _tmpcfg = dict([(test_name,dict([(self._tenvs.test_name, test_name)]+dict(unit_test_cfg).items()))])
+    _tmpcfg = dict([(test_name,dict([(self._tenvs.test_name, test_name)]+list(dict(unit_test_cfg).items())))])
     cfg = ConfigObj(_tmpcfg)
     schema_testcfg = SchemaTestConfig(cfg)
     schema_testcfg.raise_vdterror()
@@ -206,7 +206,7 @@ class UnitTestConfig(object):
 
   def get_wires(self):
     ''' return list of wires declared in wire section '''
-    return list(set(flatten_list(self.get_testbench()[self._tenvs.wire][self._tenvtb.model_ams].values())))
+    return list(set(flatten_list(list(self.get_testbench()[self._tenvs.wire][self._tenvtb.model_ams].values()))))
 
   def get_temperature(self):
     return self.get_testbench()[self._tenvs.temperature]
@@ -285,7 +285,7 @@ class UnitTestConfig(object):
   def _compile_port(self,test):
     ''' return a dict {portname:{port info}}'''
     p = test[self._tenvs.port]
-    return dict([ (k, self._elab_port(v)) for k,v in p.items()])
+    return dict([ (k, self._elab_port(v)) for k,v in list(p.items())])
 
   def _elab_port(self, port_param):
     ''' elaborate port to make a constraint '''
@@ -304,8 +304,8 @@ class UnitTestConfig(object):
       _eff_constr = self._tenvtp.constr_analog
     else:
       _eff_constr = self._tenvtp.constr_digital
-    constraint_in_cfg = filter(lambda x, opt=_eff_constr: 
-                                         x in opt, port_param.keys() )
+    constraint_in_cfg = list(filter(lambda x, opt=_eff_constr: 
+                                         x in opt, list(port_param.keys()) ))
 
     constraint = dict(dict([(p,port_param[p]) for p in constraint_in_cfg]),**pinned_dict) 
     if ptype == self._tenvp.AnalogInput:  # only analog output has abstol 
@@ -318,8 +318,8 @@ class UnitTestConfig(object):
     # 'prohibited' field is either integer or binary, and could be a list
     _p = self._tenvtp.prohibited
     _e = self._tenvtp.encode
-    prohibited = filter(lambda x: x not in [''], port_param[_p])
-    constraint[_p] = map(eval_str,prohibited) # convert to an integer
+    prohibited = [x for x in port_param[_p] if x not in ['']]
+    constraint[_p] = list(map(eval_str,prohibited)) # convert to an integer
     # if port is a digital input, automatically adds other prohibited codes due to encode
     if port_param[self._tenvtp.port_type] == self._tenvp.QuantizedAnalog or port_param[self._tenvtp.port_type] == self._tenvp.DigitalMode:
       bitw = port_param[self._tenvtp.bit_width]
@@ -361,7 +361,7 @@ class UnitTestConfig(object):
     ''' set initial condition section under testbench '''
     ic_golden = testbench[self._tenvs.initial_condition][self._tenvs.ic_golden]
     ic_revised = testbench[self._tenvs.initial_condition][self._tenvs.ic_revised]
-    ic_common = dict([(k,v) for k,v in testbench[self._tenvs.initial_condition].items() if k not in [self._tenvs.ic_golden, self._tenvs.ic_revised]])
+    ic_common = dict([(k,v) for k,v in list(testbench[self._tenvs.initial_condition].items()) if k not in [self._tenvs.ic_golden, self._tenvs.ic_revised]])
     ic_golden.update(ic_common)
     ic_revised.update(ic_common)
     return { self._tenvs.ic_golden  : ic_golden, self._tenvs.ic_revised : ic_revised }
@@ -382,7 +382,7 @@ class UnitTestConfig(object):
     ''' prepare two set of wire definition: 1) for ams and 2) for verilog '''
     wire = testbench[self._tenvs.wire]
     wire = self._update_wire(wire, tb_wires, tb_wires_unresolved)
-    wire_opt = dict([ (k,v) for k, v in wire.items() if v !=[''] ])
+    wire_opt = dict([ (k,v) for k, v in list(wire.items()) if v !=[''] ])
     return {
             self._tenvtb.model_ams : self._elab_wire(wire_opt, self._tenvtb.model_ams),
             self._tenvtb.model_verilog : self._elab_wire(wire_opt, self._tenvtb.model_verilog)
@@ -392,8 +392,8 @@ class UnitTestConfig(object):
     ''' update wire information extracted from tb_code by user-provided [wire] section '''
 
     updated_wires = dict(tb_wires)
-    unresolved_nets_displiine = tb_wires_unresolved.keys()[0]
-    unresolved_nets = tb_wires_unresolved.values()[0]
+    unresolved_nets_displiine = list(tb_wires_unresolved.keys())[0]
+    unresolved_nets = list(tb_wires_unresolved.values())[0]
     resolved_nets = []
     _un_flag = True
     if len(unresolved_nets) > 0:
@@ -403,13 +403,13 @@ class UnitTestConfig(object):
       self._logger.info(mcode.INFO_056)
 
     # overwrites [wire] info to tb_wires dict.
-    for k,v in wire.items():
+    for k,v in list(wire.items()):
       for w in v:
-        for kk, vv in tb_wires.items():
+        for kk, vv in list(tb_wires.items()):
           if w in vv:
             self._logger.warning(mcode.WARN_021 %(k, w, kk, w))
             updated_wires[kk].remove(w)
-            if k in tb_wires.keys():
+            if k in list(tb_wires.keys()):
               updated_wires[k].append(w)
             else:
               updated_wires[k] = [w]
@@ -417,7 +417,7 @@ class UnitTestConfig(object):
         if n in v:
           self._logger.warning(mcode.WARN_021 %(k, n, unresolved_nets_displiine, n))
           resolved_nets.append(n)
-          if k in tb_wires.keys():
+          if k in list(tb_wires.keys()):
             updated_wires[k].append(n)
           else:
             updated_wires[k] = [n]
@@ -436,16 +436,16 @@ class UnitTestConfig(object):
     ''' make either ams or verilog version of wire information 
         if the keys are not in the wire_map, those keys are treated as user_defined wires such that it will start with '`' in Verilog
     '''
-    default_wire = dict([(self.__wire_map[model_type][p],list(set(v))) for p,v in wire.items() if p in self.__wire_map[model_type].keys()])
-    gnd_wire = dict([(self.__gnd_map[model_type][p],list(set(v))) for p,v in wire.items() if (p in self.__gnd_map[model_type].keys() and model_type == self._tenvtb.model_ams)])
-    cwire = dict([(p,list(set(v))) for p,v in wire.items() if p not in (self.__wire_map[model_type].keys()+self.__gnd_map[model_type].keys())])
-    custom_wire = dict([('`'+p,list(set(v))) if type(v)==type([]) else ('`'+p,[v]) for p,v in cwire.items()])
-    return dict(default_wire.items() + gnd_wire.items() + custom_wire.items())
+    default_wire = dict([(self.__wire_map[model_type][p],list(set(v))) for p,v in list(wire.items()) if p in list(self.__wire_map[model_type].keys())])
+    gnd_wire = dict([(self.__gnd_map[model_type][p],list(set(v))) for p,v in list(wire.items()) if (p in list(self.__gnd_map[model_type].keys()) and model_type == self._tenvtb.model_ams)])
+    cwire = dict([(p,list(set(v))) for p,v in list(wire.items()) if p not in (list(self.__wire_map[model_type].keys())+list(self.__gnd_map[model_type].keys()))])
+    custom_wire = dict([('`'+p,list(set(v))) if type(v)==type([]) else ('`'+p,[v]) for p,v in list(cwire.items())])
+    return dict(list(default_wire.items()) + list(gnd_wire.items()) + list(custom_wire.items()))
 
   def _compile_instance(self,testbench):
     ''' return a list of verilog instantiation strings '''
     instance = testbench[self._tenvs.instance]
-    return [ self._elab_instance(p, instance[p]) for p in instance.keys()]
+    return [ self._elab_instance(p, instance[p]) for p in list(instance.keys())]
 
   def _elab_instance(self, instname, instance):
     ''' get a string to be instantiated in the verilog testbench'''
@@ -460,14 +460,14 @@ class UnitTestConfig(object):
     response = testbench[self._tenvs.response]
     simulation = test[self._tenvs.simulation]
     return self._map_response_variable(
-             dict([(k, self._elab_response(k, response[k])) for k in response.keys()]),
+             dict([(k, self._elab_response(k, response[k])) for k in list(response.keys())]),
              simulation
              )
 
   def _elab_response(self, respname, response):
     ''' return a verilog code to get a response from some output '''
     response_opt = {}
-    if self._tenvtb.sample_at in response.keys() and response[self._tenvtb.sample_at] != '': 
+    if self._tenvtb.sample_at in list(response.keys()) and response[self._tenvtb.sample_at] != '': 
       vlog_str = '''
       integer @fileid;
       initial begin
@@ -486,10 +486,10 @@ class UnitTestConfig(object):
     ''' map variable related to time information in response dump statement '''
     measfile = {}
     tname = self.get_test_name()
-    for p, v in response.items():
+    for p, v in list(response.items()):
       fileid = generate_random_str('f', 5)
       filename = '_'.join(['meas', p + '.txt']) 
-      time_opt = filter(lambda x,opt=[self._tenvtb.sample_at]:x in opt, v.keys())
+      time_opt = list(filter(lambda x,opt=[self._tenvtb.sample_at]:x in opt, list(v.keys())))
       for x in time_opt:
         v[x] = int(round(from_engr(v[x].rstrip('s'))/from_engr(simulation[self._tenvts.sim_timeunit].rstrip('s'))))
         v[self._tenvtb.meas_blk] = v[self._tenvtb.meas_blk].replace('@'+x, str(v[x]))
@@ -510,4 +510,4 @@ class UnitTestConfig(object):
       pp_scr = [interpolate_env(v, self._logger) for v in pp_script]
     else:
       pp_scr =  [None]
-    return filter(None, pp_scr), pp_cmd
+    return [_f for _f in pp_scr if _f], pp_cmd

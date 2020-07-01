@@ -58,7 +58,7 @@ def annotate_modelparam(param_map, variable_map={}):
   '''
   #if 'variable_map' not in globals():
   #  variable_map = {}
-  digital_modes = ["get_lm_equation_modes('%s', '%s')" % (k, v.keys()[0]) for k,v in param_map.items()]
+  digital_modes = ["get_lm_equation_modes('%s', '%s')" % (k, list(v.keys())[0]) for k,v in list(param_map.items())]
   digital_cases = ['digital_modes[%d][0].keys()' % i for i in range(len(digital_modes))]
   vlog_1 = 'digital_modes = [%s]\n' % ', '.join(digital_modes)
   vlog_2 = 'digital_cases = [%s]\n' % ', '.join(digital_cases)
@@ -90,11 +90,11 @@ $$[end if]
   casenumber = 'digital_cases[%d]' % case_index
   modenumber = 'digital_modes[%d]' % case_index
   template = template_base + ');'
-  vlog_statement1 = '  '+'\n  '.join([template.format(variable=v, testname=testname, response=k) for k,v in param_map_value.items()])
+  vlog_statement1 = '  '+'\n  '.join([template.format(variable=v, testname=testname, response=k) for k,v in list(param_map_value.items())])
   template = template_base + ', m);'
-  vlog_statement2 = '    '+'\n    '.join([template.format(variable=v, testname=testname, response=k) for k,v in param_map_value.items()])
+  vlog_statement2 = '    '+'\n    '.join([template.format(variable=v, testname=testname, response=k) for k,v in list(param_map_value.items())])
   template = template_base + ', %s[0]);' % modenumber
-  vlog_statement3 = '    '+'\n    '.join([template.format(variable=v, testname=testname, response=k) for k,v in param_map_value.items()])
+  vlog_statement3 = '    '+'\n    '.join([template.format(variable=v, testname=testname, response=k) for k,v in list(param_map_value.items())])
   vlog += vlog_statement_template.format(testname=testname, casenumber=casenumber, modenumber=modenumber, vlog_statement1 = vlog_statement1, vlog_statement2 = vlog_statement2, vlog_statement3 = vlog_statement3)
   return vlog
 
@@ -158,11 +158,11 @@ class Pin(object):
 
   @classmethod
   def list(cls): # return a list of pins
-    return cls.get().keys()
+    return list(cls.get().keys())
 
   @classmethod
   def list_property(cls, p): # return a list of properties for given pin name
-    return cls.get()[p].keys()
+    return list(cls.get()[p].keys())
 
   @classmethod
   def get_namemap(cls): # return a dict of pin map (generic -> user)
@@ -238,7 +238,7 @@ class Pin(object):
   def list_constraint(cls, p):
     c = cls.property(p, 'constraint')
     if c != None:
-      return c.keys()
+      return list(c.keys())
     else:
       return []
 
@@ -252,7 +252,7 @@ class Pin(object):
           err_list.append('Pin chain validation failed. Missing pin(s) "'+','.join(violated)+'" for the pin "%s"' % p)
 
     if len(err_list) > 0:
-      print '\n'.join(map(put_error_message, err_list))
+      print('\n'.join(map(put_error_message, err_list)))
       sys.exit()
 
   @classmethod
@@ -265,7 +265,7 @@ class Pin(object):
       
   @classmethod
   def list_optional(cls): # return list of generic pin names which are optional
-    return [p for p,v in cls.get().items() if v['is_optional']]
+    return [p for p,v in list(cls.get().items()) if v['is_optional']]
   
   @classmethod
   def list_optional_digital(cls):  # return generic pin names of (digital)
@@ -280,7 +280,7 @@ class Pin(object):
   def list_optional_analog_current(cls, exclude=[]):  # return generic pin names of (NOT digital) except pins listed in exclude (constraint doesn't have 'current' key)
     plist = [p for p in cls.list_optional() if cls.datatype(p) != 'logic']
     pins  = list(set(plist)-set(exclude))
-    return filter(cls.is_current, pins)
+    return list(filter(cls.is_current, pins))
   
   @classmethod
   def list_optional_analog_voltage(cls, exclude=[]):  # return generic pin names of (NOT digital) except pins listed in exclude (constraint doesn't have 'current' key)
@@ -289,7 +289,7 @@ class Pin(object):
 
   @classmethod
   def list_pinonly(cls, exclude=[]): # return optional pin names with 'is_pinonly'==True
-    return [p for p,v in cls.get().items() if v['is_pinonly']]
+    return [p for p,v in list(cls.get().items()) if v['is_pinonly']]
 
   @classmethod
   def declare_signal(cls, p):
@@ -335,7 +335,7 @@ class Param(object):
 
   @classmethod
   def list(cls): # return a list of model parameters
-    return cls.get().keys()
+    return list(cls.get().keys())
   
   @classmethod
   def is_exist(cls, p): # check if a parameter named 'p' exists
@@ -376,7 +376,7 @@ class Metric(object):
 
   @classmethod
   def list(cls): # return a list of metrics
-    return cls.get().keys()
+    return list(cls.get().keys())
 
   @classmethod
   def is_exist(cls, m): # check if a metric named 'm' exist
@@ -480,7 +480,7 @@ class PWL(object):
     '''
     Get a list of real signal expressions for optional pwl analog pins with real suffix
     '''
-    return map(cls.get_real, cls.list_optional_pins())
+    return list(map(cls.get_real, cls.list_optional_pins()))
 
 
   @classmethod
@@ -516,7 +516,7 @@ class PWL(object):
     do instantiate_pwl2real for all optional analog pins
     '''
     pl = [p for p in list(set(Pin.list_optional_analog())-set(exclude)) if Pin.datatype(p)=="pwl"]
-    _statements = map(cls.instantiate_pwl2real, pl)
+    _statements = list(map(cls.instantiate_pwl2real, pl))
     return '\n'.join(_statements)
   
 
@@ -684,7 +684,7 @@ class TestParam(object):
 
   @classmethod
   def list(cls): # return a list of parameter names
-    return cls.get().keys()
+    return list(cls.get().keys())
 
   @classmethod
   def is_exist(cls, p): # check if p param exists
@@ -705,7 +705,7 @@ class TestWire(object):
     if datatype=='':
       list_val = list_pin
     else:
-      list_val = filter(lambda x: Pin.datatype(x)==datatype, list_pin)
+      list_val = [x for x in list_pin if Pin.datatype(x)==datatype]
     return ','.join(list_val)
 
   @classmethod
@@ -740,7 +740,7 @@ class Template(object):
     snippet_on = False
     snippet_filename = os.path.join(template_rootdir, filename)
     if not os.path.exists(snippet_filename):
-      print put_error_message('No %s file exists' % snippet_filename)
+      print(put_error_message('No %s file exists' % snippet_filename))
       sys.exit()
     else:
       with open(os.path.join(template_rootdir, filename), 'r') as f:

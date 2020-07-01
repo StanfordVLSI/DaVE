@@ -51,7 +51,7 @@ def pass_args(client=False):
 
 def sigint_handler(signal, frame):
   ''' Handle user's Ctrl+C '''
-  print mcode.WARN_001
+  print(mcode.WARN_001)
   sys.exit(0)
 
 def launch(args, csocket=None):
@@ -90,9 +90,9 @@ def launch(args, csocket=None):
     
     # finishing message
     if not args.extract: # checker mode
-      map(logger.info, print_end_msg(mcode.INFO_009, '=='))
+      list(map(logger.info, print_end_msg(mcode.INFO_009, '==')))
     else: # extraction mode
-      map(logger.info, print_end_msg(mcode.INFO_009_1, '=='))
+      list(map(logger.info, print_end_msg(mcode.INFO_009_1, '==')))
   except: # handle user interrupt
     m = traceback.format_exc()
     logger.info(m.splitlines()[-1])

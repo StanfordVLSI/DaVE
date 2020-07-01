@@ -13,8 +13,8 @@ import pickle as pkl
 
 from dave.common.davelogger import DaVELogger
 from dave.common.misc import get_basename
-from simulatorinterface import NCVerilogAMS, NCVerilogD, VCSSimulator
-from testbench import TestBench
+from .simulatorinterface import NCVerilogAMS, NCVerilogD, VCSSimulator
+from .testbench import TestBench
 import dave.mprobo.mchkmsg as mcode
 from dave.mprobo.environ import EnvFileLoc
 
@@ -74,7 +74,7 @@ class RunVector(object):
       _meas_file = fname if os.path.isfile(fname) else os.path.join(workdir, fname)
       try:
         measurement[p] = (np.loadtxt(_meas_file)).tolist()
-      except Exception, e:
+      except Exception as e:
         self._logger.debug(mcode.DEBUG_007 % (workdir, e))
         return False, None
     self._logger.debug(mcode.DEBUG_008 % workdir)
@@ -88,7 +88,7 @@ class RunVector(object):
     self._pp  = PostProcessSimulation(pp_scripts, pp_cmd, self._csocket, self._logger_id) 
 
   def _validate_measurement(self, measurement, port): # validate if all outputs meets specifications
-    return ( all([measurement[0]] + [port.get_by_name(p).is_valid(v) for p,v in measurement[1].items()]), 
+    return ( all([measurement[0]] + [port.get_by_name(p).is_valid(v) for p,v in list(measurement[1].items())]), 
              measurement[1] )
 
   def _upload_measurement_client(self, rel_simpath): # asking client to upload measurement data

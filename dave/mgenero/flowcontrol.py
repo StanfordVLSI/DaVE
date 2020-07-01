@@ -25,9 +25,9 @@ def _run_mProbo(testcfg='test.cfg', simcfg='sim.cfg', report='report.html', is_c
     cmd = [os.path.join(os.environ['DAVE_INST_DIR'],'mProbo','bin','mProbo.%s'%exefile_ext)]
     #cmd_w_args = [sys.executable,cmd,'-t%s'%testcfg,'-s%s'%simcfg,'-p%d'%no_processes]
     subprocess.call(cmd+args)#, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-  print '%s starts' % behavior_msg
+  print('%s starts' % behavior_msg)
   try:
     run(args, 'exe')
   except:
     run(args, 'py')
-  print '%s is complete' % behavior_msg
+  print('%s is complete' % behavior_msg)

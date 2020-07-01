@@ -4,15 +4,15 @@ __doc__ = '''
 '''
 
 import os
-from environ import EnvFileLoc, EnvSimcfg, EnvTestcfgSection
+from .environ import EnvFileLoc, EnvSimcfg, EnvTestcfgSection
 from dave.common.empyinterface import EmpyInterface
 from dave.common.davelogger import DaVELogger
-import testbench_template
+from . import testbench_template
 from dave.common.primitive import WireCrossReference 
-import verilogparser as vp
+from . import verilogparser as vp
 import copy
 import subprocess
-import StringIO
+import io
 import re
 import dave.mprobo.mchkmsg as mcode
 
@@ -88,13 +88,13 @@ class TestBenchCDSInterface(object):
           lines.append(newl)
           portmap = vp.parse_port_map(newl)
           tb_net.append((inst[0],portmap))
-          bus_net = self._get_bus_net(portmap.values(), bus_net)
+          bus_net = self._get_bus_net(list(portmap.values()), bus_net)
           if inst[1] != None:
             tb_port += vp.get_tb_port(vp.find_cell_parameter(newl))
   
       wires = self._build_wires(tb_net, bus_net, pref_filename)
   
-      _vlog_tb = StringIO.StringIO()
+      _vlog_tb = io.StringIO()
       for w in wires:
         _vlog_tb.write(w+'\n')
       _vlog_tb.write('\n')
@@ -118,7 +118,7 @@ class TestBenchCDSInterface(object):
         right = int(b.split(':')[1].replace(']',''))
         msb = max(left,right)
         lsb = min(left,right)
-        if name in bus_net.keys():
+        if name in list(bus_net.keys()):
           bus_net.update({name:(max(msb,bus_net[name][0]), min(lsb, bus_net[name][1]))})
         else:
           bus_net.update({name:(msb, lsb)})
@@ -130,7 +130,7 @@ class TestBenchCDSInterface(object):
         if not, return the original net value,
         if it is, return the net name after stripping off [\d+:\d+]
     '''
-    for k in bus_net.keys():
+    for k in list(bus_net.keys()):
       if net.startswith(k+'['):
         return True, k
     return False, net
@@ -143,7 +143,7 @@ class TestBenchCDSInterface(object):
     net_resolved = []
   
     for inst in tb_net: # for each instance
-      for k in inst[1].keys(): # port
+      for k in list(inst[1].keys()): # port
         d = pref.get_wiretype(inst[0], k)
         net = inst[1][k] # net
         if d != None: # if signal is defined in xref file
@@ -158,13 +158,13 @@ class TestBenchCDSInterface(object):
   
     discipline[pref.get_default_wiretype()] += net_yet_resolved # unresolved net is set to default_wiretype 
   
-    for k, v in discipline.items(): # get rid of duplicates and sort 
+    for k, v in list(discipline.items()): # get rid of duplicates and sort 
       discipline[k] = sorted(list(set(v)))
   
     # build Verilog statements of wire declaration
-    for k,v in discipline.items():
+    for k,v in list(discipline.items()):
       for n in v:
-        if n in bus_net.keys():
+        if n in list(bus_net.keys()):
           busify = ' [%d:%d]' %(bus_net[n][0], bus_net[n][1])
         else:
           busify = ''

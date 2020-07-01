@@ -9,7 +9,7 @@ from dave.mprobo.environ import EnvFileLoc
 try:
   inst_dir = os.environ['DAVE_INST_DIR']
 except:
-  print "Check out the environment variable, 'DAVE_INST_DIR', is set correctly!"
+  print("Check out the environment variable, 'DAVE_INST_DIR', is set correctly!")
   sys.exit()
 
 tw = mcode.INFO_020

@@ -16,14 +16,14 @@ Note:
 import sys
 import os
 import subprocess
-import StringIO
+import io
 import re
 import yaml
 import shutil
 from time import strftime, localtime
 from dave.common.davelogger import DaVELogger
 from dave.mprobo.modelparameter import LinearModelParameter
-from model_header import MODEL_HEADER, BACKANNOTATION_API
+from .model_header import MODEL_HEADER, BACKANNOTATION_API
 from dave.common.empyinterface import EmpyInterface
 from dave.common.misc import flatten_list, get_abspath, get_dirname, get_basename
 
@@ -102,7 +102,7 @@ class TemplateInterpreter(object):
     template += template_body
 
     try: 
-      EmpyInterface(dst_file)(StringIO.StringIO(template), param) 
+      EmpyInterface(dst_file)(io.StringIO(template), param) 
     except: # run em.py to show what causes the error
       err_fname = dst_file+'.err'
       with open(err_fname, 'w') as f:

@@ -1,7 +1,7 @@
 # defines I/O port related stuff
 import copy
 import numpy as np
-from itertools import ifilter, ifilterfalse, chain
+from itertools import filterfalse, chain
 
 from dave.common.misc import flatten_list
 from dave.common.davelogger import DaVELogger
@@ -181,8 +181,8 @@ class DigitalPort(Pin):
     if self.pinned[0] == True:
       return [self.pinned_value]
     else:
-      p = range(2**self.bit_width)
-      return filter(lambda x, prohibited=self.prohibited: x not in prohibited, p)
+      p = list(range(2**self.bit_width))
+      return list(filter(lambda x, prohibited=self.prohibited: x not in prohibited, p))
 
   @property
   def pinned(self): # pinned ?, pinned value
@@ -262,7 +262,7 @@ class PortHandler(object):
   def init_port(self):
     ''' Create an empty dictionary where keys are all available port 
     class aliases and values are empty directionaries. '''
-    for x in self.PCLS_ALIAS.keys():
+    for x in list(self.PCLS_ALIAS.keys()):
       setattr(self, x, {})
 
   def add_port(self, name, pcls, description, constraint):
@@ -314,28 +314,28 @@ class PortHandler(object):
 
   def get_pure_analog_input(self):
     ''' returns a list of analog port object '''
-    p = self.get_by_type(self.tenv.AnalogInput).values()
+    p = list(self.get_by_type(self.tenv.AnalogInput).values())
     return list(chain(*[p]))
 
   def get_quantized_analog(self):
     ''' returns a list of analog port object '''
-    p = self.get_by_type(self.tenv.QuantizedAnalog).values()
+    p = list(self.get_by_type(self.tenv.QuantizedAnalog).values())
     return list(chain(*[p]))
 
   def get_digital_input(self):
     ''' returns a list of digital mode object port '''
-    return list(chain(*[self.get_by_type(self.tenv.DigitalMode).values()]))
+    return list(chain(*[list(self.get_by_type(self.tenv.DigitalMode).values())]))
 
   def get_analog(self):
-    p = self.get_by_type(self.tenv.AnalogInput).values()
-    v = self.get_by_type(self.tenv.AnalogOutput).values()
+    p = list(self.get_by_type(self.tenv.AnalogInput).values())
+    v = list(self.get_by_type(self.tenv.AnalogOutput).values())
     return list(chain(*[p+v]))
 
   def get_digital(self):
-    digital = self.PCLS_ALIAS.keys()
+    digital = list(self.PCLS_ALIAS.keys())
     digital = list(set(digital)-set([self.tenv.AnalogInput, self.tenv.AnalogOutput]))
     v = []
-    for p in digital: v = v + self.get_by_type(p).values()
+    for p in digital: v = v + list(self.get_by_type(p).values())
     return list(chain(*[v]))
 
   def get_by_type(self, pcls):
@@ -348,24 +348,24 @@ class PortHandler(object):
   
   def get_by_name(self, name):
     ''' return port object of which port name matches name '''
-    for pa in self.PCLS_ALIAS.keys():
-      for x in self.get_by_type(pa).values():
+    for pa in list(self.PCLS_ALIAS.keys()):
+      for x in list(self.get_by_type(pa).values()):
         if x.name == name:
           return x
     return None
 
   def get_pinned(self, ports=[]): # return a list of pinned port objects 
     lfn = lambda v: v.is_pinned
-    return list(ifilter(lfn, ports))
+    return list(filter(lfn, ports))
 
   def get_unpinned(self, ports=[]): # return a list of unpinned port objects 
     lfn = lambda v: v.is_pinned
-    return list(ifilterfalse(lfn, ports))
+    return list(filterfalse(lfn, ports))
 
   def get_name_by_type(self, pcls):
     ''' return a list of port names of which port class alias matches 'pcls' '''
     port_obj = self.get_by_type(pcls)
-    return [] if len(port_obj) == 0 else port_obj.keys()
+    return [] if len(port_obj) == 0 else list(port_obj.keys())
 
   def get_quantized_port_name(self):
     ''' return a list of port names of which port class is quantized analog '''
@@ -376,10 +376,10 @@ class PortHandler(object):
     return self.get_name_by_type(self.tenv.AnalogInput)
 
   def get_unpinned_quantized_port_name(self):
-    return filter(lambda x: self.get_by_name(x).is_pinned == False, self.get_quantized_port_name())
+    return [x for x in self.get_quantized_port_name() if self.get_by_name(x).is_pinned == False]
 
   def get_unpinned_analoginput_port_name(self):
-    return filter(lambda x: self.get_by_name(x).is_pinned == False, self.get_analoginput_port_name())
+    return [x for x in self.get_analoginput_port_name() if self.get_by_name(x).is_pinned == False]
 
   def get_output_port_name(self):
     ''' return a list of port names of which port class is analog output '''
@@ -397,7 +397,7 @@ class PortHandler(object):
 
   def get_name(self):
     ''' Returns a dict where { port_class_alias : list of port names } '''
-    return dict([(x,self.get_name_by_type(x)) for x in self.PCLS_ALIAS.keys()])
+    return dict([(x,self.get_name_by_type(x)) for x in list(self.PCLS_ALIAS.keys())])
 
   def get_no_of_unpinned_analoginput(self):
     ''' Returns the number of unpinned analog inputs (analog + quantized analog) '''
@@ -413,15 +413,15 @@ class PortHandler(object):
     self._logger.debug(mcode.DEBUG_003 % port.get_constraint())
 
   def get_info_all(self): # print information of all ports to a logger 
-    for p in flatten_list(self.get_name().values()):
+    for p in flatten_list(list(self.get_name().values())):
       self.get_info(p)
 
   def __has_port(self, name):
     ''' checks if there is a port, named "name" and returns a tuple of
         (True/False, port instance, port class alias, description) '''
-    for x in self.PCLS_ALIAS.keys():
+    for x in list(self.PCLS_ALIAS.keys()):
       palias = getattr(self, x)
-      if name in palias.keys(): # if port name "name" exists 
+      if name in list(palias.keys()): # if port name "name" exists 
         return True, palias[name], x, palias[name].description
     return False, None, None, None
 

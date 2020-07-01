@@ -1,9 +1,9 @@
-from amschkschema import SchemaSimulatorConfig
-from environ import EnvSimcfg
-from environ import EnvTestcfgOption, EnvTestcfgSection
+from .amschkschema import SchemaSimulatorConfig
+from .environ import EnvSimcfg
+from .environ import EnvTestcfgOption, EnvTestcfgSection
 from dave.common.davelogger import DaVELogger
 from dave.common.checkeval import ehdnsxmgor
-from configobjwrapper import ConfigObjWrapper
+from .configobjwrapper import ConfigObjWrapper
 import os
 import sys
 from dave.common.misc import get_abspath, interpolate_env, featureinfo
@@ -137,7 +137,7 @@ class SimulatorConfigModel(object):
   def get_circuits(self):
     ''' return dictionary {circuit name:filename} for circuit netlist '''
     try:
-      return dict([(k, interpolate_env(v, self._logger)) for k, v in self.cfg_model[self._tenv.circuit].items()]) 
+      return dict([(k, interpolate_env(v, self._logger)) for k, v in list(self.cfg_model[self._tenv.circuit].items())]) 
     except:
       return None
 

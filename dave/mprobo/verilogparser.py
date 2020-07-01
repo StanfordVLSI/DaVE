@@ -5,7 +5,7 @@ Limited verilog parser for module instantiation statement
 '''
 
 import re
-import StringIO
+import io
 import os
 import dave.mprobo.mchkmsg as mcode
 
@@ -143,7 +143,7 @@ def parse_port_map(line, logger=None):
       if logger != None:
         logger.debug('Errors in parsing port map (%s), since parsing Verilog netlist is not fully supported yet' % line)
       else:
-        print 'Errors in parsing port map (%s), since parsing Verilog netlist is not fully supported yet' % line
+        print('Errors in parsing port map (%s), since parsing Verilog netlist is not fully supported yet' % line)
       return None
   else:
     return None
@@ -163,7 +163,7 @@ def getline_verilog(filename, stringio=False):
   txt = strip_verilog_blockcomments(txt)
   txt = strip_verilog_blockcomments(txt,('(*','*)')) # in caes the model is created using amsdirect, amsdesigner in Cadence
   
-  _vlogfile = StringIO.StringIO()
+  _vlogfile = io.StringIO()
   _vlogfile.write(txt)
 
   tline = ''
@@ -197,7 +197,7 @@ def get_port(filename, modulename):
 def build_parameter(para={}):
   ''' build a verilog parameter map string '''
   strout = ''
-  return ', '.join(['.%s(%s)' % (p,v) for p, v in para.items()])
+  return ', '.join(['.%s(%s)' % (p,v) for p, v in list(para.items())])
 
 def buildline_verilog(cellname, parameter, instname, portmap):
   if parameter == None:

@@ -8,8 +8,8 @@ TODO:
 import yaml
 import os
 import re
-from environ import EnvFileLoc
-from linearregression import LinearRegressionSM
+from .environ import EnvFileLoc
+from .linearregression import LinearRegressionSM
 from dave.common.misc import flatten_list
 
 
@@ -46,15 +46,15 @@ class LinearModelParameter(object):
     ''' reformulate extracted linear model coefficients in mProbo 
         Not support PWL segmented tests yet
     '''
-    if testname not in self._param.keys():
+    if testname not in list(self._param.keys()):
       self._param[testname] = {}
     for r in res:
       for e in r[2]['lr_formula_suggested']:
-        for k,v in LinearRegressionSM.extract_coef_from_lr_formula(e).items():
-          if k in self._param[testname].keys():
-            self._param[testname][k].append({'mode':dict(r[0].items()), 'coef':v})
+        for k,v in list(LinearRegressionSM.extract_coef_from_lr_formula(e).items()):
+          if k in list(self._param[testname].keys()):
+            self._param[testname][k].append({'mode':dict(list(r[0].items())), 'coef':v})
           else:
-            self._param[testname][k]=[{'mode':dict(r[0].items()), 'coef':v}]
+            self._param[testname][k]=[{'mode':dict(list(r[0].items())), 'coef':v}]
 
   @classmethod
   def get_default_filename(cls):
@@ -68,10 +68,10 @@ class LinearModelParameter(object):
     return yaml.dump(self._param)
 
   def get_lm_coef(self, testname, dv, iv, mode={'dummy_digitalmode':0}):
-    if dv in self._param[testname].keys():
+    if dv in list(self._param[testname].keys()):
       for v in self._param[testname][dv]:
         if v['mode']==mode:
-          if iv in v['coef'].keys():
+          if iv in list(v['coef'].keys()):
             return v['coef'][iv]
           else:
             return None
@@ -81,10 +81,10 @@ class LinearModelParameter(object):
 
   def get_terms(self, testname, dv, mode={'dummy_digitalmode':0}):
     ''' return a list of terms for dependent variable dv '''
-    if dv in self._param[testname].keys():
+    if dv in list(self._param[testname].keys()):
       for v in self._param[testname][dv]:
         if v['mode']==mode:
-          return v['coef'].keys()
+          return list(v['coef'].keys())
       return None
     else:
       return None
@@ -111,8 +111,8 @@ def main():
   ifile = '/home/bclim/proj/DaVE/mssmodel/sandbox/cteq/.mProbo/extracted_linear_model.yaml'
   mp = LinearModelParameter()
   mp.load_model_parameters(ifile)
-  print mp.show_param_in_yaml()
-  print mp.get_lm_equation('test1', metric,[('ibias','ibias_r'),('ctl1','ctl1_r'),('vcm','vcm_r')],mode)
+  print(mp.show_param_in_yaml())
+  print(mp.get_lm_equation('test1', metric,[('ibias','ibias_r'),('ctl1','ctl1_r'),('vcm','vcm_r')],mode))
 
 if __name__ == "__main__":
   main()

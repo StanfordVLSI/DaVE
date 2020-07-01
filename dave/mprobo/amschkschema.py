@@ -11,10 +11,10 @@ TODO:
 from configobj import ConfigObj, flatten_errors
 from validate import Validator, ValidateError, VdtTypeError
 import os
-from StringIO import StringIO
-import mproboenv
+from io import StringIO
+from . import mproboenv
 
-from environ import EnvFileLoc, EnvFileLoc, EnvTestcfgSection, EnvTestcfgOption, EnvTestcfgPort, EnvSimcfg, EnvPortName
+from .environ import EnvFileLoc, EnvFileLoc, EnvTestcfgSection, EnvTestcfgOption, EnvTestcfgPort, EnvSimcfg, EnvPortName
 from dave.common.misc import get_abspath, from_engr, force_list, str2num
 from dave.common.davelogger import DaVELogger
 import dave.mprobo.mchkmsg as mcode
@@ -45,7 +45,7 @@ class SchemaConfig(object):
         if key in error_key:
           raise ValidateError(msg)
         else:
-          print '[Warning]' + msg
+          print('[Warning]' + msg)
 
   def get_cfg(self):
     ''' get validated ConfigObj '''
@@ -96,7 +96,7 @@ class SchemaSimulatorConfig(SchemaConfig):
       return section
   
     assert section[self._tenvsc.model] == self._tenvsc.model_ams, mcode.ERR_014  % self._tenvsc.model_ams
-    for k,v in section[self._tenvsc.circuit].items():
+    for k,v in list(section[self._tenvsc.circuit].items()):
       assert type(v)==str, mcode.ERR_015 % (v,k)
       fname = get_abspath(v, do_assert=False, logger=self._logger)
       #assert os.path.isfile(fname), mcode.ERR_016  % v 
@@ -156,7 +156,7 @@ class SchemaTestConfig(SchemaConfig):
     self._output_vdterror([])
 
   def _run_custom_check(self):
-    for t in self.config.keys():
+    for t in list(self.config.keys()):
       self.config[t][self._tenvs.option] = self._chk_regress(self.config[t][self._tenvs.option])
       self.config[t][self._tenvs.port] = self._chk_port(self.config[t][self._tenvs.port])
 
@@ -164,15 +164,15 @@ class SchemaTestConfig(SchemaConfig):
     ''' do_not_progress subsection under regression section 
         it takes/returns the whole regress section
     '''
-    if self._tenvr.regression_do_not_regress not in section.keys():
+    if self._tenvr.regression_do_not_regress not in list(section.keys()):
       return section
     
-    section[self._tenvr.regression_do_not_regress] = dict([(k,force_list(v)) for k,v in section[self._tenvr.regression_do_not_regress].items()])
+    section[self._tenvr.regression_do_not_regress] = dict([(k,force_list(v)) for k,v in list(section[self._tenvr.regression_do_not_regress].items())])
     return section 
   
   def _chk_port(self, section):
     ''' prohibited, default_value '''
-    for k,v in section.items():
+    for k,v in list(section.items()):
       section[k][self._tenvtp.default_value] = self._chk_port_default(section[k])
       #TODO: validate prohibited 
       #try:

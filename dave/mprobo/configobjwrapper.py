@@ -36,11 +36,11 @@ class ConfigObjWrapper(object):
 
   def _get_section_list(self, cfgobj):
     ''' return a list of section names '''
-    return cfgobj.keys()
+    return list(cfgobj.keys())
 
   def _get_section_list_exclude_default(self, section, default_name):
     ''' return a list of section names except 'default_name' '''
-    return filter(lambda x:x.lower() not in [default_name], section)
+    return [x for x in section if x.lower() not in [default_name]]
 
   def _get_section(self, name):
     ''' return a section's contents by name '''

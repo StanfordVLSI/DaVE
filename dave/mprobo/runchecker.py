@@ -57,7 +57,7 @@ class RunChecker(object):
   def __call__(self):
     testres = [] # test results
     self._testnames = self._tcfg.get_all_testnames() # get all test names
-    map(self._logger.info, print_section(mcode.INFO_012, 1))
+    list(map(self._logger.info, print_section(mcode.INFO_012, 1)))
     self._logger.info(self._testnames)
 
     if self._inv: dlrtmvkdldjem()
@@ -90,14 +90,14 @@ class RunChecker(object):
 
     # print where the report file is
     rptpath = os.path.relpath(self._rptfile, self._workdir)
-    map(self._logger.info, print_section(mcode.INFO_013 % rptpath, 1))
+    list(map(self._logger.info, print_section(mcode.INFO_013 % rptpath, 1)))
 
     if self._inv: dlrtmvkdldjem()
 
   def _run_a_test(self, testname, testdir, testcfg, simcfg, rptgen):
     ''' Run the checking of a test '''
 
-    map(self._logger.info, print_section(mcode.INFO_014 % testname, 1))
+    list(map(self._logger.info, print_section(mcode.INFO_014 % testname, 1)))
 
     if make_dir(testdir, self._logger, not self._cache):
       self._logger.warn(mcode.WARN_002 % os.path.relpath(testdir))
@@ -110,13 +110,13 @@ class RunChecker(object):
       shutil.rmtree(testdir)
       self._logger.info(mcode.INFO_015 % os.path.relpath(testdir))
 
-    map(self._logger.info, print_end_msg(mcode.INFO_016 % testname, '=='))
+    list(map(self._logger.info, print_end_msg(mcode.INFO_016 % testname, '==')))
     return res
 
   def _test_error_summary(self, result):
     ''' logging error summary '''
     msg = mcode.INFO_017 % (mcode.INFO_018) 
-    map(self._logger.info,print_section(msg, 1))
+    list(map(self._logger.info,print_section(msg, 1)))
     tab = generate_check_summary_table(result)
     self._logger.info(tab.draw())
 

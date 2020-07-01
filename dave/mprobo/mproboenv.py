@@ -5,7 +5,7 @@ Schema for all the keywords used in mProbo
   - simcfg: sim.cfg
 '''
 
-from StringIO import StringIO
+from io import StringIO
 import copy
   
 envcfg = StringIO("""

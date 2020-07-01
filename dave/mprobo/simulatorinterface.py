@@ -10,7 +10,7 @@ import re
 import subprocess
 import dave.common.misc as misc
 from dave.common.davelogger import DaVELogger
-from environ import EnvSimulatorClassOpt
+from .environ import EnvSimulatorClassOpt
 from dave.common.empyinterface import EmpyInterface
 from dave.mprobo.environ import EnvFileLoc
 
@@ -39,7 +39,7 @@ class Simulator(object):
 
     self.cls_attribute.update(cls_attr)
 
-    for k,v in self.cls_attribute.items(): # create class attributes
+    for k,v in list(self.cls_attribute.items()): # create class attributes
       setattr(self, '_'+k, v)
     
   def run(self, use_cache): # Run a Verilog simulation, or skip it if use_cache 
@@ -62,7 +62,7 @@ class Simulator(object):
       self._logger.debug("Going back to running directory")
       self._sweep_files(workdir) # sweep temporary simulation files
     else: # client-server mode
-      files = filter(os.path.isfile, glob.glob(os.path.join(self._workdir,'*')))
+      files = list(filter(os.path.isfile, glob.glob(os.path.join(self._workdir,'*'))))
       files = [os.path.join(relpath, misc.get_basename(f)) for f in files]
       logfile = os.path.join(relpath,EnvFileLoc().simlogfile)
       self._csocket.issue_command('@download %s' % ' '.join(files))
@@ -201,7 +201,7 @@ class NCVerilogAMS(NCSimulator):
                          '+amsconnrules+' + connrules
 
   def _generate_ic_deck(self, ic): # generate .ic statement to set inintial condition of circuit nodes
-    return '\n'.join(['.ic(test.%s) = %s' %(k, v) for k,v in ic.items()])
+    return '\n'.join(['.ic(test.%s) = %s' %(k, v) for k,v in list(ic.items())])
 
   def _gen_scs_file(self, scs_template, param, vector, workdir): # generate analog control file 
     # two step, the second phase bind vectors to initial condition statement in .scs file if any 
@@ -217,6 +217,6 @@ class NCVerilogAMS(NCSimulator):
         TODO: Sometimes, the auto_bus expansion of cadence NCAMS does not work '''
     fid, filename = tempfile.mkstemp(suffix='_prop.cfg', dir=workdir)
     with os.fdopen(fid, 'w') as f:
-      for p, v in circuit.items():
+      for p, v in list(circuit.items()):
         f.write(self.PROP_STR.format(cellname=p, netlistfile=os.path.abspath(v)))
     return misc.get_basename(filename)

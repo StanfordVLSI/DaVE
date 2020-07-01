@@ -1,4 +1,4 @@
-from StringIO import StringIO
+from io import StringIO
 
 __doc__ = """
 This contains some Orthogonal Array (OA) tables for test vector generation.

@@ -4,7 +4,7 @@ __doc__ = '''
 
 import os
 import re
-import StringIO
+import io
 from dave.mprobo.environ import EnvFileLoc
 import dave.mprobo.verilogparser as vp
 from dave.common.primitive import WireCrossReference 
@@ -40,8 +40,8 @@ class TestBenchWire(object):
     return self._tb_port
 
   def get_testbench(self):  # build/return multiline testbench with wire declaration
-    _vlog_tb = StringIO.StringIO()
-    for w, v in self._wires.items()+self._unresolved_wires.items():
+    _vlog_tb = io.StringIO()
+    for w, v in list(self._wires.items())+list(self._unresolved_wires.items()):
       for n in v:
         _vlog_tb.write("`%s %s" %(w,n)+'\n')
     _vlog_tb.write('\n')
@@ -51,7 +51,7 @@ class TestBenchWire(object):
 
   def _load(self, vlog_tb):
     ''' load verilog testbench in multiline text and return Verilog lines for parsing it.  '''
-    vlog_file = StringIO.StringIO(vlog_tb)
+    vlog_file = io.StringIO(vlog_tb)
     return vp.getline_verilog(vlog_file, stringio=True)
 
   def _parse_vlogtb(self, vlog_lines):
@@ -70,7 +70,7 @@ class TestBenchWire(object):
         _pmap = vp.parse_port_map(_line, self._logger) # dict of port and its wire for each instance
         if _pmap != None:
           inst_port.append((inst[0], _pmap)) # append the port map to port_map
-          bus = self._get_bus_size(_pmap.values(), bus) # create busified nets if any
+          bus = self._get_bus_size(list(_pmap.values()), bus) # create busified nets if any
           if inst[1] != None:
             tb_port += vp.get_tb_port(vp.find_cell_parameter(_line)) # extract mProbo port in a Verilog instance parameter
     return tb_body, tb_port, inst_port, bus
@@ -87,7 +87,7 @@ class TestBenchWire(object):
         right = int(b.split(':')[1].replace(']',''))
         msb = max(left,right)
         lsb = min(left,right)
-        if name in bus.keys():
+        if name in list(bus.keys()):
           bus.update({name:(max(msb,bus[name][0]), min(lsb, bus[name][1]))})
         else:
           bus.update({name:(msb, lsb)})
@@ -99,7 +99,7 @@ class TestBenchWire(object):
         if not, return the original net value,
         if it is, return the net name after stripping off [\d+:\d+]
     '''
-    for k in bus.keys():
+    for k in list(bus.keys()):
       if net.startswith(k+'['):
         return True, k
     return False, net
@@ -111,7 +111,7 @@ class TestBenchWire(object):
     net_resolved = []     # port discipline is not defined in port reference
 
     for inst in inst_port: # for each instance
-      for k in inst[1].keys(): # port
+      for k in list(inst[1].keys()): # port
         d = self._pref.get_wiretype(inst[0], k)
         net = inst[1][k] # net
         if d != None: # if signal is defined in xref file
@@ -124,7 +124,7 @@ class TestBenchWire(object):
     
     net_yet_resolved = list(set(net_yet_resolved)-set(net_resolved))
 
-    for k, v in discipline.items(): # get rid of duplicates and sort 
+    for k, v in list(discipline.items()): # get rid of duplicates and sort 
       discipline[k] = sorted(list(set(v)))
   
     unresolved_discipline = {self._pref.get_default_wiretype(): sorted(list(set(net_yet_resolved)))} # unresolved net is set to default_wiretype 
@@ -139,8 +139,8 @@ class TestBenchWire(object):
   def _busify_net(self, discipline, bus_net): # busify net if any
     # build Verilog statements of wire declaration
     _dis = {}
-    for k,v in discipline.items():
-      _dis[k] = ['[%d:%d] %s' %(bus_net[n][0], bus_net[n][1], n) if n in bus_net.keys() else n for n in v]
+    for k,v in list(discipline.items()):
+      _dis[k] = ['[%d:%d] %s' %(bus_net[n][0], bus_net[n][1], n) if n in list(bus_net.keys()) else n for n in v]
     return _dis
       
 #      for n in v:

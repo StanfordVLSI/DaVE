@@ -3,7 +3,7 @@
 # A sample setup file for DaVE
 # Copyright (c) 2014-2016 by Byong Chan Lim. All rights reserved.
 
-export DAVE_INST_DIR="/home/zamyers/DaVE/DaVE" # change this variable properly 
+export DAVE_INST_DIR="/home/dstanley/research/DaVE" # change this variable properly 
 export DAVE_SAMPLES="${DAVE_INST_DIR}/samples"
 
 export mLINGUA_DIR="${DAVE_INST_DIR}/mLingua"

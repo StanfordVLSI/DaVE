@@ -10,11 +10,11 @@ from pprint import pformat
 import numpy as np
 import multiprocessing as mp
 
-from port import PortHandler
-from vectorgenerator import TestVectorGenerator
-from simulation import RunVector
-from linearregression import LinearRegressionSM
-from testbench import TestBench 
+from .port import PortHandler
+from .vectorgenerator import TestVectorGenerator
+from .simulation import RunVector
+from .linearregression import LinearRegressionSM
+from .testbench import TestBench 
 from dave.mprobo.environ import EnvTestcfgOption, EnvFileLoc, EnvSimcfg
 from dave.mprobo.checker import UnitChecker, generate_check_summary_table
 import dave.mprobo.verilogparser as vp
@@ -142,7 +142,7 @@ class TestUnit(object):
 
   def _run_all_modes(self, mode_vector, modetxt, mode_idx):
     ''' run modes configured by true digital inputs '''
-    map(self._logger.info, print_section('Testing the mode (%s)' % modetxt, 2))
+    list(map(self._logger.info, print_section('Testing the mode (%s)' % modetxt, 2)))
     if self._rptgen != None:
       self._rptgen.print_testmode(mode_idx+1, modetxt, self._rptgen.make_testmode_link(self._testname, mode_vector)) # create hyperlink for each mode in a report
 
@@ -154,7 +154,7 @@ class TestUnit(object):
           - test vector with mode inputs being removed
           - output responses
     '''
-    map(self._logger.info, print_section(mcode.INFO_022, 3))
+    list(map(self._logger.info, print_section(mcode.INFO_022, 3)))
     max_run = self._tvh.get_analog_vector_length() # no. of test vector
     if self._cache:
       self._logger.info('\n'+mcode.INFO_023)
@@ -194,11 +194,11 @@ class TestUnit(object):
     
       simres_golden, simres_revised = self._exercise_unit(nth_mode, mode, sim_idx, no_run, max_run, vector)
       for j in range(sim_idx, sim_idx+no_run): 
-        for k, v in vector[j].items():
+        for k, v in list(vector[j].items()):
           exec_vector[k][j] = v
-        for k, v in simres_golden[j-sim_idx][1].items():
+        for k, v in list(simres_golden[j-sim_idx][1].items()):
           meas_golden[k][j] = v
-        for k, v in simres_revised[j-sim_idx][1].items():
+        for k, v in list(simres_revised[j-sim_idx][1].items()):
           meas_revised[k][j] = v
 
       # chop data upto current run
@@ -240,13 +240,13 @@ class TestUnit(object):
     if not self.goldensim_only:
       self._print_interim_summary(res, self._testname, mode, modetxt)
 
-    map(self._logger.info, print_end_msg(mcode.INFO_021 % modetxt, '--'))
+    list(map(self._logger.info, print_end_msg(mcode.INFO_021 % modetxt, '--')))
 
     return res
 
   def _print_interim_summary(self, result, test, mode, modetxt):
     ''' logging error summary '''
-    map(self._logger.info, print_section(mcode.INFO_058 % modetxt, 3))
+    list(map(self._logger.info, print_section(mcode.INFO_058 % modetxt, 3)))
     moderes = [(mode, modetxt, result)]
     testres = [(test, [(r[1], r[2]['error_flag_pin'], r[2]['error_flag_residue']) for r in moderes])]
     tab = generate_check_summary_table(testres)
@@ -260,7 +260,7 @@ class TestUnit(object):
     
     np = self._np # number of threads
     for i in range(offset, offset+nrun):
-      pretty_vector = dict([ (k, TestVectorGenerator.conv_tobin(self._ph, k, v)) for k, v in vector[i].items() ])
+      pretty_vector = dict([ (k, TestVectorGenerator.conv_tobin(self._ph, k, v)) for k, v in list(vector[i].items()) ])
       self._logger.info(mcode.INFO_024 % (i+1, max_run, pformat(pretty_vector, width=1000))) # display running vector
 
     # run vectors (Multiprocessing enabled)
@@ -351,10 +351,10 @@ class TestUnit(object):
     ''' dump vector & measurement data to a .csv file under test directory '''
     mdl_type = 'golden' if is_golden else 'revised'
     csv_file = os.path.join(self.testdir, '_'.join([self._tenvf.csv_vector_meas_prefix, mdl_type, 'mode', str(nth_mode)]) + '.csv')
-    df = pd.DataFrame(dict([ (k, TestVectorGenerator.conv_tobin(self._ph, k, v)) for k, v in vector.items() ]))
+    df = pd.DataFrame(dict([ (k, TestVectorGenerator.conv_tobin(self._ph, k, v)) for k, v in list(vector.items()) ]))
     df = df.join(pd.DataFrame(meas))
     if not quite:
-      map(self._logger.info, print_section(mcode.INFO_026 %(mdl_type), 4))
+      list(map(self._logger.info, print_section(mcode.INFO_026 %(mdl_type), 4)))
       self._logger.info(df)
       self._logger.debug("\n"+mcode.DEBUG_001 % (mdl_type, os.path.relpath(csv_file)))
     df.to_csv(csv_file)
@@ -365,9 +365,9 @@ class TestUnit(object):
     '''
     if self._ph.get_by_name('dummy_analoginput') != None: # duplicates data for the case w/o unpinned analog inputs
       #vector = dict([ (k, [list(v)[0]+i for i in range(20)]) for k,v in vector.items()])
-      vector = dict([ (k, [list(v)[0]]*20) for k,v in vector.items()])
-      meas_golden = dict([ (k, [list(v)[0]]*20) for k,v in meas_golden.items()])
-      meas_revised = dict([ (k, [list(v)[0]]*20) for k,v in meas_revised.items()])
+      vector = dict([ (k, [list(v)[0]]*20) for k,v in list(vector.items())])
+      meas_golden = dict([ (k, [list(v)[0]]*20) for k,v in list(meas_golden.items())])
+      meas_revised = dict([ (k, [list(v)[0]]*20) for k,v in list(meas_revised.items())])
 
     # load regression option
     regress_opt = self._load_regression_option() # option for deep comparison
@@ -412,28 +412,28 @@ class TestUnit(object):
     lrr_sgt = self._lrr_sgt_simple if is_simple else self._lrr_sgt
     if is_simple:
       if not quite: 
-        map(self._logger.info, print_section(mcode.INFO_027_1, 3))
+        list(map(self._logger.info, print_section(mcode.INFO_027_1, 3)))
       else:
-        map(self._logger.debug, print_section(mcode.INFO_027_1, 3))
+        list(map(self._logger.debug, print_section(mcode.INFO_027_1, 3)))
     else:
       if not quite: 
-        map(self._logger.info, print_section(mcode.INFO_027, 3))
+        list(map(self._logger.info, print_section(mcode.INFO_027, 3)))
       else:
-        map(self._logger.debug, print_section(mcode.INFO_027, 3))
+        list(map(self._logger.debug, print_section(mcode.INFO_027, 3)))
     # 1-phase linear regression
     self._run_linear_regression_phase1( lrg, lrr, lr_param, is_simple, quite=quite )
 
     # Improving models by filtering out insiginicant predictors
     if is_simple:
       if not quite: 
-        map(self._logger.info, print_section(mcode.INFO_028_1, 3))
+        list(map(self._logger.info, print_section(mcode.INFO_028_1, 3)))
       else:
-        map(self._logger.debug, print_section(mcode.INFO_028_1, 3))
+        list(map(self._logger.debug, print_section(mcode.INFO_028_1, 3)))
     else:
       if not quite: 
-        map(self._logger.info, print_section(mcode.INFO_028, 3))
+        list(map(self._logger.info, print_section(mcode.INFO_028, 3)))
       else:
-        map(self._logger.debug, print_section(mcode.INFO_028, 3))
+        list(map(self._logger.debug, print_section(mcode.INFO_028, 3)))
 
     # filter with normalized input sensitivity
     self._run_linear_regression_phase2( lrg_sgt, lrr_sgt, lr_param, is_simple, no_iter=10, quite=quite )
@@ -492,7 +492,7 @@ class TestUnit(object):
 
   def _load_regression_option(self):
     ''' load options for linear regression '''
-    r_opt = copy.deepcopy(self._test_cfg.get_option().items()) # don't want the original one is modified
+    r_opt = copy.deepcopy(list(self._test_cfg.get_option().items())) # don't want the original one is modified
     r_opt.append(('qaport_name', self._ph.get_quantized_port_name())) # currently, no use
     return dict(r_opt)
 
@@ -503,21 +503,21 @@ class TestUnit(object):
     else:
       lr = self._lrg if is_golden else self._lrr
     msg_header = self.mdl_msg_header(is_golden)
-    map(self._logger.info, print_section(mcode.INFO_029 % msg_header, 4))
+    list(map(self._logger.info, print_section(mcode.INFO_029 % msg_header, 4)))
     lr.print_model_summary()
 
   def _print_linear_equation(self, lr, is_golden=False, is_simple=False, quite=False):
     msg_header = self.mdl_msg_header(is_golden)
     if is_simple:
       if not quite:
-        map(self._logger.info, print_section(mcode.INFO_030_1 % msg_header, 4))
+        list(map(self._logger.info, print_section(mcode.INFO_030_1 % msg_header, 4)))
       else:
-        map(self._logger.debug, print_section(mcode.INFO_030_1 % msg_header, 4))
+        list(map(self._logger.debug, print_section(mcode.INFO_030_1 % msg_header, 4)))
     else:
       if not quite:
-        map(self._logger.info, print_section(mcode.INFO_030 % msg_header, 4))
+        list(map(self._logger.info, print_section(mcode.INFO_030 % msg_header, 4)))
       else:
-        map(self._logger.debug, print_section(mcode.INFO_030 % msg_header, 4))
+        list(map(self._logger.debug, print_section(mcode.INFO_030 % msg_header, 4)))
     lr.print_formula(quite)
 
   def _dump_regression_data(self, nth_mode, is_golden):
@@ -538,16 +538,16 @@ class TestUnit(object):
   def _remove_mode_vector(self, vector, digital_mode):
     ''' Delete digital mode vector from given vector for linear regression
     '''
-    return dict([(k,v) for k,v in vector.items() if k not in digital_mode.keys()])
+    return dict([(k,v) for k,v in list(vector.items()) if k not in list(digital_mode.keys())])
 
   def _create_port(self, test_cfg):
     ''' Create port objects specified in a test configuration 
         A dummy digital mode port will also be created if no digital mode port exists
     '''
-    map(self._logger.info, print_section(mcode.INFO_032, 2))
+    list(map(self._logger.info, print_section(mcode.INFO_032, 2)))
 
     # create port object to port handler
-    for p, v in test_cfg.get_port().items():
+    for p, v in list(test_cfg.get_port().items()):
       self._ph.add_port(p, test_cfg.get_port_type(v), test_cfg.get_port_description(v), test_cfg.get_port_constraint(v) )
 
     # create dummy digital mode port if necessary
@@ -564,7 +564,7 @@ class TestUnit(object):
   
 
   def _make_modetext(self, mode):
-      return ', '.join(["'%s'=b%s" %(p, dec2bin(v,self._ph.get_by_name(p).bit_width)) for p,v in mode.items()])
+      return ', '.join(["'%s'=b%s" %(p, dec2bin(v,self._ph.get_by_name(p).bit_width)) for p,v in list(mode.items())])
 
   def _make_dir(self):
     ''' make directories for simulating golden & revised models '''
@@ -585,7 +585,7 @@ class TestUnit(object):
     for l in vp.getline_verilog(tb_filename):
       if vp.is_instance(l):
         portmap = vp.parse_port_map(l)
-        wires.append(portmap.values())
+        wires.append(list(portmap.values()))
     wires = sorted(list(set(flatten_list(wires))))
 
     wire_matched = wires_declared == wires
@@ -593,7 +593,7 @@ class TestUnit(object):
     def printable_wirename(wire_list):
       return ["'%s'" % w for w in wire_list]
 
-    map(self._logger.info, print_section(mcode.INFO_034, 2))
+    list(map(self._logger.info, print_section(mcode.INFO_034, 2)))
     self._logger.warn(mcode.WARN_006 % ', '.join(printable_wirename(wires)))
     self._logger.warn(mcode.WARN_007 % ', '.join(printable_wirename(wires_declared)))
     self._logger.warn(mcode.WARN_008 % ('matched' if wire_matched else 'unmatched'))
@@ -621,7 +621,7 @@ class TestUnit(object):
     #return all([err_flag_pin == [], err_flag_accurate == []])
     return err_flag_pin == []
     '''
-    for k in simple.keys():
+    for k in list(simple.keys()):
       if simple[k]['err_flag_pin']=='failure' and accurate[k]['err_flag_residue']=='failure':
         return False
     return True
