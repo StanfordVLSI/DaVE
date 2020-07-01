@@ -23,8 +23,8 @@ lm_param = {lm_param}
 
 def mode_exists(testname): # return False if there is only 'dummy_digitalmode' in a test, testname
   param = globals()['lm_param']
-  response = param[testname][param[testname].keys()[0]][0]
-  if response['mode'].keys()==['dummy_digitalmode']:
+  response = param[testname][list(param[testname].keys())[0]][0]
+  if list(response['mode'].keys())==['dummy_digitalmode']:
     return False
   else:
     return True
@@ -37,10 +37,10 @@ def get_lm_coef(testname, dv, iv, mode={{'dummy_digitalmode':0}}):
       mode: dict of true digital input vector in test.cfg
   '''
   param = globals()['lm_param']
-  if dv in param[testname].keys():
+  if dv in list(param[testname].keys()):
     for v in param[testname][dv]:
       if v['mode']==mode:
-        if iv in v['coef'].keys():
+        if iv in list(v['coef'].keys()):
           return v['coef'][iv]
         else:
           return None
@@ -53,10 +53,10 @@ def get_terms(testname, dv, mode={{'dummy_digitalmode':0}}):
       Note that A, B, A:B are all different terms
   '''
   param = globals()['lm_param']
-  if dv in param[testname].keys():
+  if dv in list(param[testname].keys()):
     for v in param[testname][dv]:
       if v['mode']==mode:
-        return v['coef'].keys()
+        return list(v['coef'].keys())
     return None
   else:
     return None
@@ -68,7 +68,7 @@ def get_lm_equation_modes(testname, dv):
 
 def replace_lm_variable_name(t):
   ''' replace variable name in linear equation by looking up variable_map if exists '''
-  if t in variable_map.keys():
+  if t in list(variable_map.keys()):
     return variable_map[t]
   elif Pin.is_exist(t):
     if Pin.datatype(t) == 'pwl':

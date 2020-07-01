@@ -124,7 +124,7 @@ class TemplateInterpreter(object):
       api_fullpath = get_abspath(self.DEFAULT_API, True, self.logger)
       self.logger.info("[INFO] Use default API calls in '%s'" % api_fullpath)
     # the API will be executed in a template
-    return '\n@{\n' + 'execfile("%s")' % api_fullpath + '}@\n'
+    return '\n@{\n' + 'exec(open("%s").read())' % api_fullpath + '}@\n'
 
 
   def _print_header(self, section):
