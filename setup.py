@@ -13,6 +13,11 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/StanfordVLSI/DaVE",
     packages=setuptools.find_packages(),
+    install_requires = [
+        'BitVector',
+        'configobj',
+        'empy',
+    ],
     classifiers=[
         "Programming Language :: Python :: 3",
         # for now, licesnse is very slightly modified BSD
