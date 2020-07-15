@@ -17,6 +17,7 @@ setuptools.setup(
         'BitVector',
         'configobj',
         'empy',
+        'statsmodels',
     ],
     classifiers=[
         "Programming Language :: Python :: 3",
