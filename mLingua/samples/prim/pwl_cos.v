@@ -19,98 +19,105 @@ authorization from Stanford University. Contact bclim@stanford.edu for details.
 
 ****************************************************************/
 
+`include "mLingua_pwl.vh"
 
 module pwl_cos #(
-  parameter real etol = 0.0001, // error tolerance of PWL approximation
-  parameter real freq = 100e6,  // frequency
-  parameter real amp  = 0.01,   // amplitude
-  parameter real offset = 0.01, // DC offset
-  parameter real ph   = 0.0     // initial phase in degree
+    parameter real etol=0.0001,    // error tolerance of PWL approximation
+    parameter real freq=100e6,     // frequency
+    parameter real amp=0.01,       // amplitude
+    parameter real offset=0.01,    // DC offset
+    parameter real ph=0.0          // initial phase in degrees
 ) (
-  `output_pwl out    // cosine output in pwl
+    `output_pwl out                // cosine output in pwl
 );
+    // set timing options
+    timeunit `DAVE_TIMEUNIT;
+    timeprecision `DAVE_TIMEUNIT;
 
-timeunit `DAVE_TIMEUNIT ;
-timeprecision `DAVE_TIMEUNIT ;
+    // instantiate object for PWL updates
+    PWLMethod pm=new;
 
-`protect
-//pragma protect 
-//pragma protect begin
+    // wires
+    event  wakeup;    // event signal
+    real phase;
+    real dPhase;
+    real t_cur;        // current time
+    real out_cur;      // current output signal value
+    real out_nxt;      // out at (t_cur+dT) for pwl output data
+    real dT;           // time interval of PWL waveform
+    real out_slope;    // out slope
 
-`get_timeunit // get timeunit in sec and assign it to the variable 'TU'
-PWLMethod pm=new;
+    // you may need some additional wire definitions here
+    initial begin
+      phase = ph/180*(`M_PI);
+      dPhase = 0.0;
+      ->> wakeup;
+    end
 
-// DPI-C function if needed (only takes an input and produces a real output)
-import "DPI-C" pure function real cos(input real x);
+    always @(wakeup) begin
+        // get current time
+        t_cur = ($realtime/1s);
 
-// wires
-event  wakeup;  // event signal
-real phase;
-real dPhase;
-real dTr;  // time interval of PWL waveform
-real t_cur;   // current time
-real out_cur; // current output signal value
-real out_nxt;  // out at (t_cur+dT) for pwl output data
-time dT;
+        // update phase, wrapping as necessary
+        // TODO: should modular arithmetic be used here instead?
+        // The potential issue is that the phase update is greater
+        // than 2*pi.  That shouldn't normally happen but is possible
+        // in some corner cases.
+        phase = phase + dPhase;
+        if (phase >= 2*(`M_PI)) begin
+            phase = phase - (2*(`M_PI));
+        end
 
+        // calculate current output
+        out_cur = fn_pwl_cos(phase);
 
-real out_slope; // out slope
+        // calculate next wakeup time
+        dT = calculate_Tintv_pwl_cos(etol, phase);
 
-// you may need outme additional wire definition here
-initial begin
-  phase = ph/180*`M_PI;
-  dPhase = 0.0;
-  ->> wakeup;
-end
+        // calculate phase at next wakeup time
+        dPhase = (2*(`M_PI))*freq*dT;
 
-always @(wakeup) begin
-  t_cur = `get_time;
-  phase = phase + dPhase;
-  if (phase >= 2*`M_PI) phase = phase - 2*`M_PI;
-  out_cur = fn_pwl_cos(phase);
-  dTr = calculate_Tintv_pwl_cos(etol, phase);
-  dPhase = 2*`M_PI*freq*dTr;
-  out_nxt = fn_pwl_cos(phase+dPhase);
-  out_slope = (out_nxt-out_cur)/dTr;
-  out = pm.write(out_cur, out_slope, t_cur);
-  dT = time'(dTr/TU);
-  ->> #(dT) wakeup;
-end
+        // calculate value at next wakeup time
+        out_nxt = fn_pwl_cos(phase+dPhase);
 
-/*******************************************
-  Response function, its 1st/2nd derivatives
-*******************************************/
+        // calculate slope between current value and next wakeup time
+        out_slope = (out_nxt-out_cur)/dT;
 
-function real fn_pwl_cos;
-input real phase;
-begin
-  return offset + amp*cos(phase);
-end
-endfunction
+        // write current output value and calculated slope to the output
+        out = pm.write(out_cur, out_slope, t_cur);
 
-function real f2max_pwl_cos;
-input real phase;
-begin
-  return abs(amp*(2*`M_PI*freq)**2);
-end
-endfunction
+        // trigger wakeup at some time in the future
+        ->> #(dT*1s) wakeup;
+    end
 
-/*************************************
-  Caluating Tintv
-*************************************/
+    // Value of the cosine function
 
-function real calculate_Tintv_pwl_cos;
-input real etol, phase; 
-real abs_f2max;
-real calcT;
-begin
-  abs_f2max = f2max_pwl_cos(phase);
-  calcT = sqrt(8.0*etol/abs_f2max); 
-  return min(`DT_MAX,max(TU,min(1.0,calcT)));
-end
-endfunction
+    function real fn_pwl_cos(input real phase);
+        return offset + amp*cos(phase);
+    endfunction
 
-//pragma protect end
-`endprotect
+    // Maximum second derivative of the cosine
+
+    function real f2max_pwl_cos(input real phase);
+        return abs(amp*(2*(`M_PI)*freq)**2);
+    endfunction
+
+    // Caluating Tintv
+
+    function real calculate_Tintv_pwl_cos(input real etol, input real phase);
+        // internal variables
+        real abs_f2max;
+        real calcT;
+
+        // calculate maximum second derivative of the cosine
+        abs_f2max = f2max_pwl_cos(phase);
+
+        // convert this second derivative to a time based
+        // on the allowed error tolerance
+        calcT = sqrt(8.0*etol/abs_f2max);
+
+        // return timestep, clamped between the min/max limits
+        return min(`DT_MAX, max((`DAVE_TIMEUNIT)/1s, calcT));
+    endfunction
 
 endmodule

@@ -22,6 +22,7 @@ authorization from Stanford University. Contact bclim@stanford.edu for details.
 
 ****************************************************************/
 
+`include "mLingua_pwl.vh"
 
 module bit2pwl #(
   parameter real vh=1.0,  // value corresponds to logic 'H'
@@ -45,7 +46,7 @@ real transition;
 event wakeup;
 event dummy_evt;
 
-`protect
+//`protect
 //pragma protect 
 //pragma protect begin
 
@@ -79,6 +80,6 @@ function real get_value (logic _in);
 endfunction 
 
 //pragma protect end
-`endprotect
+//`endprotect
 
 endmodule

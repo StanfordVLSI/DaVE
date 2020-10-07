@@ -19,6 +19,7 @@ authorization from Stanford University. Contact bclim@stanford.edu for details.
 
 ****************************************************************/
 
+`include "mLingua_pwl.vh"
 
 module pwl_filter_real_p1 #(
   parameter etol = 0.005,     // error tolerance of PWL approximation
@@ -32,13 +33,13 @@ module pwl_filter_real_p1 #(
 timeunit `DAVE_TIMEUNIT ;
 timeprecision `DAVE_TIMEUNIT ;
 
-`protect
+//`protect
 //pragma protect 
 //pragma protect begin
 
 pwl_filter_real_w_reset #(.etol(etol), .filter(0), .en_filter(en_filter)) xinst (.in(in), .out(out), .fp1(fp));
 
 //pragma protect end
-`endprotect
+//`endprotect
 
 endmodule
