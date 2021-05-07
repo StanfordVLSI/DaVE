@@ -320,6 +320,49 @@ class Pin(object):
     '''
     return statement.replace('@@','@') if Pin.is_exist(p) else ''
 
+  assert_string = '''
+reg assert_clk;
+event assert_event;
+
+always @(assert_event) begin
+    #1
+    assert_clk = 1;
+    #1;
+    assert_clk = 0;
+end
+  '''
+
+  @classmethod
+  def print_asserts(cls):
+      vlogstatement = ['\n// assert optional ports are in range']
+      vlogstatement.append(cls.assert_string)
+
+      for p in cls.list():
+        if 'value' in cls.get()[p]:
+          #value = cls.get()[p]['value']
+          #if ',' not in value:
+          #  continue
+          name = cls.name(p)
+          vlogstatement.append(f'always @({name}) ->> assert_event;')
+
+      vlogstatement.append('always @(posedge assert_clk) begin')
+      for p in cls.list():
+        if 'value' in cls.get()[p]:
+          value = cls.get()[p]['value']
+          if ',' not in value:
+            value_pinned = float(value)
+            err = 0.02
+            value = (value_pinned * (1-err), value_pinned * (1+err))
+          else:
+            value = [float(x) for x in value[1:-1].split(',')]
+          name = cls.name(p)
+          vlogstatement.append(f'    assert property ({name} >= {value[0]});')
+          vlogstatement.append(f'    assert property ({name} <= {value[1]});')
+      vlogstatement.append('end')
+
+      return '\n'.join(vlogstatement)
+
+
 ##############################
 # PARAMETER section
 ##############################
