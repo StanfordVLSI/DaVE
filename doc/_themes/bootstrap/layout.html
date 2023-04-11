@@ -1,67 +1,79 @@
 {% extends "basic/layout.html" %}
-{% set script_files = script_files + ['_static/js/bootstrap-2.2.1.min.js', '_static/bootstrap-sphinx.js'] %}
-{% set css_files = ['_static/css/bootstrap-2.2.1.min.css', '_static/bootstrap-sphinx.css', '_static/css/bootstrap-responsive-2.2.1.min.css'] + css_files %}
+
+{% if theme_bootstrap_version == "3" %}
+  {% set bootstrap_version, navbar_version = "3.4.1", "" %}
+  {% set bs_span_prefix = "col-md-" %}
+{% else %}
+  {% set bootstrap_version, navbar_version = "2.3.2", "-2" %}
+  {% set bs_span_prefix = "span" %}
+{% endif %}
+
+{%- set render_sidebar = (not embedded) and (not theme_nosidebar|tobool) and sidebars %}
+
+{%- set bs_content_width = render_sidebar and "9" or "12"%}
 
 {%- block doctype -%}
 <!DOCTYPE html>
 {%- endblock %}
 
-{# Sidebar: Rework into our Boostrap nav section. #}
+{# Sidebar: Rework into our Bootstrap nav section. #}
 {% macro navBar() %}
-  <div id="navbar" class="{{ theme_navbar_class }} {% if theme_navbar_fixed_top == 'true' -%} navbar-fixed-top{%- endif -%}">
-    <div class="navbar-inner">
-      <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
-      <button class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-      </button>
-
-      <a class="brand" href="{{ pathto(master_doc) }}">{{ project|e }}</a>
-      <span class="navbar-text pull-left"><b>{{ version|e }}</b></span>
-
-      <div class="nav-collapse">
-        <ul class="nav">
-          <li class="divider-vertical"></li>
-          {% block sidebartoc %}
-            {% include "globaltoc.html" %}
-            {% include "localtoc.html" %}
-          {% endblock %}
-          {% block sidebarrel %}
-            {% include "relations.html" %}
-          {% endblock %}
-          {% if theme_source_link_position == "nav" %}
-            <li>{% include "sourcelink.html" %}</li>
-          {% endif %}
-        </ul>
-
-        {% block sidebarsearch %}
-          {% include "searchbox.html" %}
-        {% endblock %}
-      </div>
-    </div>
-  </div>
+{% include "navbar" + navbar_version + ".html" %}
 {% endmacro %}
+
+{% if theme_bootstrap_version == "3" %}
+  {%- macro bsidebar() %}
+      {%- if render_sidebar %}
+      <div class="{{ bs_span_prefix }}3">
+        <div id="sidebar" class="bs-sidenav" role="complementary">
+          {%- for sidebartemplate in sidebars %}
+            {%- include sidebartemplate %}
+          {%- endfor %}
+        </div>
+      </div>
+      {%- endif %}
+  {%- endmacro %}
+{% else %}
+  {%- macro bsidebar() %}
+      {%- if render_sidebar %}
+      <div class="{{ bs_span_prefix }}3">
+        <div id="sidebar" class="bs-sidenav well" data-spy="affix">
+          {%- for sidebartemplate in sidebars %}
+            {%- include sidebartemplate %}
+          {%- endfor %}
+        </div>
+      </div>
+      {%- endif %}
+  {%- endmacro %}
+{% endif %}
 
 {%- block extrahead %}
 <meta charset='utf-8'>
 <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
 <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
 <meta name="apple-mobile-web-app-capable" content="yes">
+<script type="text/javascript" src="{{ pathto('_static/js/jquery-1.12.4.min.js', 1) }}"></script>
+<script type="text/javascript" src="{{ pathto('_static/js/jquery-fix.js', 1) }}"></script>
+<script type="text/javascript" src="{{ pathto('_static', 1) + '/bootstrap-' + bootstrap_version + '/js/bootstrap.min.js' }}"></script>
+<script type="text/javascript" src="{{ pathto('_static/bootstrap-sphinx.js', 1) }}"></script>
 {% endblock %}
 
 {# Silence the sidebar's, relbar's #}
 {% block header %}{% endblock %}
-{% block sidebar1 %}{% endblock %}
-{% block sidebar2 %}{% endblock %}
 {% block relbar1 %}{% endblock %}
 {% block relbar2 %}{% endblock %}
 {% block sidebarsourcelink %}{% endblock %}
 
 {%- block content %}
+{{ navBar() }}
 <div class="container">
-  {{ navBar() }}
-  {% block body %}{% endblock %}
+  <div class="row">
+    {%- block sidebar1 %}{{ bsidebar() }}{% endblock %}
+    <div class="body {{ bs_span_prefix }}{{ bs_content_width }} content" role="main">
+      {% block body %}{% endblock %}
+    </div>
+    {% block sidebar2 %} {# possible location for sidebar #} {% endblock %}
+  </div>
 </div>
 {%- endblock %}
 
@@ -87,10 +99,9 @@
       {% trans last_updated=last_updated|e %}Last updated on {{ last_updated }}.{% endtrans %}<br/>
     {%- endif %}
     {%- if show_sphinx %}
-      {% trans sphinx_version=sphinx_version|e %}Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> {{ sphinx_version }}.{% endtrans %}<br/>
+      {% trans sphinx_version=sphinx_version|e %}Created using <a href="http://sphinx-doc.org/">Sphinx</a> {{ sphinx_version }}.{% endtrans %}<br/>
     {%- endif %}
     </p>
   </div>
 </footer>
 {%- endblock %}
-
